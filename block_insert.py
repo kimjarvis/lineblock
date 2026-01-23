@@ -31,6 +31,7 @@ def is_end_marker(line):
 
 
 def process_file(source_file, insert_path, clear_mode=False):
+    print(f"debug 00 {source_file} {insert_path}")
     try:
         with open(source_file, "r") as f:
             original_lines = f.readlines()
@@ -111,9 +112,10 @@ def process_path(path, insert_path, clear_mode):
     if path.is_file():
         process_file(path, insert_path, clear_mode)
     else:
-        for py_file in path.rglob("*.py"):
-            process_file(py_file, insert_path, clear_mode)
-
+        for file in path.rglob("*.py"):
+            process_file(file, insert_path, clear_mode)
+        for md_file in path.rglob("*.md"):
+            process_file(md_file, insert_path, clear_mode)
 
 def main():
     parser = argparse.ArgumentParser(description="Insert code blocks into Python files based on markers.")
