@@ -1,5 +1,4 @@
 import argparse
-import os
 import re
 from pathlib import Path
 
@@ -11,6 +10,7 @@ def indent_lines(lines, spaces):
         indented_line = f"{' ' * max(0, spaces)}{stripped}\n"
         indented.append(indented_line)
     return indented
+
 
 def extract_block_info(marker_line, insert_path):
     # Match Python-style marker (# block insert ...)
@@ -30,7 +30,6 @@ def extract_block_info(marker_line, insert_path):
     return file_path, total_indent, original_indent
 
 
-
 def is_start_marker(line):
     line = line.strip()
     # Check for Python-style marker (# block insert ...)
@@ -41,6 +40,7 @@ def is_start_marker(line):
         return True, "markdown"
     return False
 
+
 def is_end_marker(line):
     line = line.strip()
     # Check for Python-style marker (# block end)
@@ -50,6 +50,7 @@ def is_end_marker(line):
     if re.fullmatch(r"\s*<!--\s*block end\s*-->", line):
         return True
     return False
+
 
 def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
     try:
@@ -62,6 +63,7 @@ def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
     output = []
     i = 0
     changed = False
+    block_type = "none"  # Default block type
 
     while i < len(original_lines):
         line = original_lines[i]
@@ -98,10 +100,12 @@ def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
                     print(f"Warning: Block file '{file_path}' not found.")
 
                 # Add end marker
-                if source_file.suffix == ".py":
+                if block_type == "python":
                     replacement.append(f"{' ' * orig_indent}# block end\n")
-                elif source_file.suffix == ".md":
+                elif block_type == "markdown":
                     replacement.append(f"{' ' * orig_indent}<!-- block end -->\n")
+                else:
+                    replacement.append(f"{' ' * orig_indent}# block end\n")
                 output.extend(replacement)
                 changed = True
 
@@ -125,10 +129,19 @@ def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
         with open(source_file, "r") as f:
             lines_after_clear = f.readlines()
 
-        final_lines = [
-            line for line in lines_after_clear
-            if not (is_start_marker(line) or is_end_marker(line))
-        ]
+        final_lines = []
+
+        for line in lines_after_clear:
+            is_start = is_start_marker(line)
+            end_result = is_end_marker(line)
+
+            # Extract block type from is_end_marker's return value
+            if end_result[0]:  # If it's an end marker
+                block_type = end_result[1]  # Set block_type to the returned string
+
+            # Include the line in final_lines only if it's neither a start nor an end marker
+            if not (is_start or end_result[0]):
+                final_lines.append(line)
 
         if final_lines != lines_after_clear:
             with open(source_file, "w") as f:
