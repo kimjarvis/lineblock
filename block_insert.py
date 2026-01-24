@@ -12,11 +12,15 @@ def indent_lines(lines, spaces):
         indented.append(indented_line)
     return indented
 
-
 def extract_block_info(marker_line, insert_path):
-    match = re.match(r"(\s*)(?:#|<!--)\s*block insert\s+(\S+)(?:\s+(-?\d+))?\s*(?:-->)?", marker_line)
+    # Match Python-style marker (# block insert ...)
+    match = re.match(r"(\s*)#\s*block insert\s+(\S+)(?:\s+(-?\d+))?", marker_line)
     if not match:
-        return None
+        # Match Markdown-style marker (<!-- block insert ... -->)
+        match = re.match(r"(\s*)<!--\s*block insert\s+(\S+)(?:\s+(-?\d+))?\s*-->", marker_line)
+        if not match:
+            return None
+
     leading_ws = match.group(1)
     file_name = match.group(2)
     extra_indent = int(match.group(3)) if match.group(3) else 0
@@ -26,12 +30,26 @@ def extract_block_info(marker_line, insert_path):
     return file_path, total_indent, original_indent
 
 
-def is_start_marker(line):
-    return re.fullmatch(r"\s*(?:#|<!--)\s*block insert\s+\S+.*(?:-->)?", line.strip()) is not None
 
+def is_start_marker(line):
+    line = line.strip()
+    # Check for Python-style marker (# block insert ...)
+    if re.fullmatch(r"\s*#\s*block insert\s+\S+.*", line):
+        return True, "python"
+    # Check for Markdown-style marker (<!-- block insert ... -->)
+    if re.fullmatch(r"\s*<!--\s*block insert\s+\S+.*-->", line):
+        return True, "markdown"
+    return False
 
 def is_end_marker(line):
-    return re.fullmatch(r"\s*(?:#|<!--)\s*block end\s*(?:-->)?", line.strip()) is not None
+    line = line.strip()
+    # Check for Python-style marker (# block end)
+    if re.fullmatch(r"\s*#\s*block end\s*", line):
+        return True
+    # Check for Markdown-style marker (<!-- block end -->)
+    if re.fullmatch(r"\s*<!--\s*block end\s*-->", line):
+        return True
+    return False
 
 def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
     try:
