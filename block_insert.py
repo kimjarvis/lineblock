@@ -80,7 +80,10 @@ def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
                     print(f"Warning: Block file '{file_path}' not found.")
 
                 # Add end marker
-                replacement.append(f"{' ' * orig_indent}# block end\n")
+                if source_file.suffix == ".py":
+                    replacement.append(f"{' ' * orig_indent}# block end\n")
+                elif source_file.suffix == ".md":
+                    replacement.append(f"{' ' * orig_indent}<!-- block end -->\n")
                 output.extend(replacement)
                 changed = True
 
