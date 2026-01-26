@@ -73,7 +73,7 @@ def process_file(source_file, extract_path):
 
                 # Write extracted block with indentation
                 indented_lines = indent_lines(block_lines, total_indent)
-                with open(file_path, "a") as out_f:
+                with open(file_path, "w") as out_f:
                     out_f.writelines(indented_lines)
         i += 1
 
