@@ -1,0 +1,33 @@
+    "200": {
+        "description": "Successful Response",
+        "content": {
+            "application/json": {
+                "example": [
+                    {
+                        "host": "server104",
+                        "error": False,
+                        "message": "",
+                        "request": {
+                            "group": "all",
+                            "name": None,
+                            "sudo": False,
+                            "su": False,
+                            "cmd": "systemctl start firewalld"
+                        }
+                    },
+                    {
+                        "host": "server105",
+                        "error": False,
+                        "message": "",
+                        "request": {
+                            "group": "all",
+                            "name": None,
+                            "sudo": False,
+                            "su": False,
+                            "cmd": "systemctl start firewalld"
+                        }
+                    }
+                ]
+            }
+        }
+    }
