@@ -2,7 +2,7 @@
 import logging
 import os
 
-from scripts import block_insert as block_insert
+from block_insert import block_insert
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 def test_last_line():
     # Call the function that generates the output file
     print("hello world")
-    block_insert.block_insert(
+    block_insert(
         source_path="tests/sources/last_line.md",
         insert_path="tests/snippets",
         output_path="tests/outputs"
@@ -37,7 +37,7 @@ def test_last_line():
 def test_basic1():
     # Call the function that generates the output file
     print("hello world")
-    block_insert.block_insert(
+    block_insert(
         source_path="tests/sources/basic.md",
         insert_path="tests/snippets",
         output_path="tests/outputs"
