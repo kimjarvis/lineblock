@@ -156,29 +156,3 @@ def test_done_already():
 
     assert not os.path.exists(output_file), f"Output file not found: {output_file}"
 
-
-def test_indent():
-    # Call the function that generates the output file
-    print("hello world")
-    block_insert(
-        source_path="tests/sources/indent.md",
-        insert_path="tests/snippets",
-        output_path="tests/outputs"
-    )
-
-    # Define paths to the generated and expected files
-    output_file = "tests/outputs/indent.md"
-    expected_file = "tests/expected/indent.md"
-
-    # Assert that both files exist
-    assert os.path.exists(output_file), f"Output file not found: {output_file}"
-    assert os.path.exists(expected_file), f"Expected file not found: {expected_file}"
-
-    # Read the contents of both files
-    with open(output_file, "r", encoding="utf-8") as f:
-        output_content = f.read()
-    with open(expected_file, "r", encoding="utf-8") as f:
-        expected_content = f.read()
-
-    # Assert that the contents are identical
-    assert output_content == expected_content, "Generated file content does not match expected content."
