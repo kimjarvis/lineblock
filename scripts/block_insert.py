@@ -11,11 +11,16 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+# along with this program.  If not, see <https://www.gnu.org/licenses/    >.
 # block end
 import argparse
 import re
+import logging
 from pathlib import Path
+from datetime import datetime
+
+# Module-level logger – callers can configure it externally
+logger = logging.getLogger(__name__)
 
 
 def indent_lines(lines, spaces):
@@ -28,7 +33,6 @@ def indent_lines(lines, spaces):
 
 
 def extract_block_info(marker_line, insert_path):
-    # Match Python-style marker (# block insert ...)
     match = re.match(r"(\s*)#\s*block insert\s+(\S+)(?:\s+(-?\d+))?", marker_line)
     if match:
         leading_ws = match.group(1)
@@ -39,7 +43,6 @@ def extract_block_info(marker_line, insert_path):
         file_path = Path(insert_path) / file_name
         return file_path, total_indent, original_indent, "python"
 
-    # Match Markdown-style marker (<!-- block insert ... -->)
     match = re.match(r"(\s*)<!--\s*block insert\s+(\S+)(?:\s+(-?\d+))?\s*-->", marker_line)
     if match:
         leading_ws = match.group(1)
@@ -70,17 +73,34 @@ def is_end_marker(line):
         return True
     return False
 
-def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
+
+def process_file(source_file, insert_path, output_root=None, source_root=None, clear_mode=False):
     try:
         with open(source_file, "r") as f:
             original_lines = f.readlines()
     except FileNotFoundError:
+        logger.error(f"Source file '{source_file}' not found.")
         print(f"Error: Source file '{source_file}' not found.")
         return
 
     output = []
     i = 0
     changed = False
+    source_path = Path(source_file).resolve()
+
+    # Determine output path
+    if output_root is None:
+        # In-place modification
+        output_path = source_path
+    else:
+        # Write to output directory preserving relative structure
+        if source_root is None:
+            # Single file case: output directly to output_root/filename
+            output_path = output_root / source_path.name
+        else:
+            # Directory case: preserve relative path under output_root
+            rel_path = source_path.relative_to(source_root)
+            output_path = output_root / rel_path
 
     while i < len(original_lines):
         line = original_lines[i]
@@ -88,11 +108,18 @@ def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
 
         if info:
             file_path, total_indent, orig_indent, block_type = info
+            file_exists = file_path.exists()
 
-            # Check if the block file exists
-            if not file_path.exists():
+            # Log block processing details
+            status = "FOUND" if file_exists else "NOT FOUND"
+            logger.debug(f"SOURCE: {source_path}")
+            logger.debug(f"INSERT: {file_path} [{status}]")
+            logger.debug(f"OUTPUT: {output_path}")
+
+            if not file_exists:
+                logger.warning(f"Block file '{file_path}' not found.")
                 print(f"Warning: Block file '{file_path}' not found.")
-                output.append(line)  # Keep the marker line
+                output.append(line)
                 i += 1
                 continue
 
@@ -105,109 +132,140 @@ def process_file(source_file, insert_path, clear_mode=False, remove_mode=False):
 
             next_i = (end_i + 1) if end_i is not None else (i + 1)
 
-            if clear_mode or remove_mode:
-                # Keep only the start marker; drop content and end marker
+            if clear_mode:
                 output.append(line)
                 changed = True
             else:
-                # Normal mode: insert content between markers
-                replacement = [line]  # keep start marker
+                replacement = [line]
 
-                # Read and insert block content
                 try:
                     with open(file_path, "r") as f:
                         block_content = f.readlines()
                     indented_block = indent_lines(block_content, total_indent)
                     replacement.extend(indented_block)
                 except FileNotFoundError:
+                    logger.warning(f"Block file '{file_path}' not found.")
                     print(f"Warning: Block file '{file_path}' not found.")
 
-                # Add matching end marker
                 if block_type == "python":
                     replacement.append(f"{' ' * orig_indent}# block end\n")
-                elif block_type == "markdown":
-                    replacement.append(f"{' ' * orig_indent}<!-- block end -->\n")
                 else:
-                    # Fallback (should not occur)
-                    replacement.append(f"{' ' * orig_indent}# block end\n")
+                    replacement.append(f"{' ' * orig_indent}<!-- block end -->\n")
 
                 output.extend(replacement)
                 changed = True
 
             i = next_i
         else:
-            # Handle orphaned end markers in clear/remove mode
-            if (clear_mode or remove_mode) and is_end_marker(line):
+            if clear_mode and is_end_marker(line):
                 changed = True
             else:
                 output.append(line)
             i += 1
 
-    # Write if content changed
+    # Write output if changed
     if output != original_lines:
-        with open(source_file, "w") as f:
+        # Ensure output directory exists
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(output_path, "w") as f:
             f.writelines(output)
-        print(f"Updated file: {source_file}")
+        action = "Created" if output_root else "Updated"
+        logger.info(f"{action} file: {output_path}")
+        print(f"{action} file: {output_path}")
 
-    # Extra step for --remove: strip all marker lines
-    if remove_mode:
-        with open(source_file, "r") as f:
-            lines_after_clear = f.readlines()
 
-        final_lines = []
-        for line in lines_after_clear:
-            is_start, _ = is_start_marker(line)
-            is_end = is_end_marker(line)
-            if not (is_start or is_end):
-                final_lines.append(line)
-
-        if final_lines != lines_after_clear:
-            with open(source_file, "w") as f:
-                f.writelines(final_lines)
-            print(f"Removed all block markers from: {source_file}")
-
-def process_path(path, insert_path, clear_mode=False, remove_mode=False):
-    path = Path(path).expanduser().resolve()
+def process_path(source_path, insert_path, output_path=None, clear_mode=False):
+    source_path = Path(source_path).expanduser().resolve()
     insert_path = Path(insert_path).expanduser().resolve()
 
-    if not path.exists():
-        print(f"Error: Source path '{path}' does not exist.")
+    if not source_path.exists():
+        logger.error(f"Source path '{source_path}' does not exist.")
+        print(f"Error: Source path '{source_path}' does not exist.")
         return
     if not insert_path.is_dir():
+        logger.error(f"Insert path '{insert_path}' is not a directory.")
         print(f"Error: Insert path '{insert_path}' is not a directory.")
         return
 
-    if path.is_file():
-        process_file(path, insert_path, clear_mode, remove_mode)
-    else:
-        for file in path.rglob("*.py"):
-            process_file(file, insert_path, clear_mode, remove_mode)
-        for md_file in path.rglob("*.md"):
-            process_file(md_file, insert_path, clear_mode, remove_mode)
+    # Resolve output path if provided
+    output_root = Path(output_path).expanduser().resolve() if output_path else None
+    if output_root and not output_root.exists():
+        output_root.mkdir(parents=True, exist_ok=True)
 
-def block_insert(source_path: str, insert_path: str, clear_mode=False, remove_mode=False):
-    """Insert code blocks into Python files based on markers.
+    # Prevent processing files inside output directory when scanning source directory
+    if source_path.is_dir() and output_root:
+        if output_root.resolve() in source_path.resolve().parents or output_root == source_path.resolve():
+            logger.error(f"Output path '{output_root}' must not be inside or equal to source path '{source_path}'")
+            print(f"Error: Output path must not be inside or equal to source path")
+            return
+
+    if source_path.is_file():
+        # Skip if this file is inside the output directory (prevent recursive processing)
+        if output_root and source_path.resolve().parent == output_root.resolve():
+            logger.debug(f"Skipping file in output directory: {source_path}")
+            return
+        process_file(source_path, insert_path, output_root=output_root, clear_mode=clear_mode)
+    else:
+        # Directory processing: collect source files excluding output directory contents
+        source_root = source_path
+        py_files = [f for f in source_path.rglob("*.py")
+                    if not (output_root and output_root in f.resolve().parents)]
+        md_files = [f for f in source_path.rglob("*.md")
+                    if not (output_root and output_root in f.resolve().parents)]
+
+        for file in py_files:
+            process_file(file, insert_path, output_root=output_root, source_root=source_root, clear_mode=clear_mode)
+        for file in md_files:
+            process_file(file, insert_path, output_root=output_root, source_root=source_root, clear_mode=clear_mode)
+
+
+def block_insert(source_path: str, insert_path: str, output_path: str = None, clear_mode: bool = False):
+    """Insert code blocks into Python/Markdown files based on markers.
 
     Args:
-        source_path (Path): Source file or directory.
-        insert_path (Path): Base path for block files.
+        source_path (str): Source file or directory.
+        insert_path (str): Base path for block files.
+        output_path (str, optional): Directory where generated files will be written.
+            If None, source files are modified in-place.
         clear_mode (bool): Clear blocks without insertion.
-        remove_mode (bool): Clear blocks and then remove all marker lines.
+
+    Note:
+        This function uses the standard logging module. Callers should configure
+        logging externally (e.g., via logging.basicConfig) if log output is desired.
+        No log file is created automatically by this function.
     """
-    process_path(source_path, insert_path, clear_mode, remove_mode)
+    process_path(source_path, insert_path, output_path, clear_mode)
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Insert code blocks into Python files based on markers.")
+    parser = argparse.ArgumentParser(description="Insert code blocks into Python/Markdown files based on markers.")
     parser.add_argument("--source_path", required=True, help="Source file or directory.")
     parser.add_argument("--insert_path", required=True, help="Base path for block files.")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--clear", action="store_true", help="Clear blocks without insertion.")
-    group.add_argument("--remove", action="store_true", help="Clear blocks and then remove all marker lines.")
+    parser.add_argument("--output_path",
+                        help="Directory for generated files (preserves structure). If omitted, modifies sources in-place.")
+    parser.add_argument("--clear", action="store_true", help="Clear blocks without insertion.")
     args = parser.parse_args()
 
-    # process_path(args.source_path, args.insert_path, args.clear, args.remove)
-    block_insert(source_path=args.source_path, insert_path=args.insert_path, clear_mode=args.clear, remove_mode=args.remove)
+    # CLI-specific: configure logging to log.txt with minimal formatting
+    log_handler = logging.FileHandler("log.txt", mode="a")
+    log_handler.setFormatter(logging.Formatter("%(message)s"))
+    logger.addHandler(log_handler)
+    logger.setLevel(logging.DEBUG)
+
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    logger.info(f"=== RUN {timestamp} ===")
+
+    # Execute block insertion with logging active
+    block_insert(
+        source_path=args.source_path,
+        insert_path=args.insert_path,
+        output_path=args.output_path,
+        clear_mode=args.clear
+    )
+
+    logger.info("")  # Blank line between runs
+    logger.removeHandler(log_handler)
+    log_handler.close()
 
 
 if __name__ == "__main__":

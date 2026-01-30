@@ -1,32 +1,61 @@
-import pytest
+# test_example.py
+import logging
+import os
+
+from scripts import block_insert as block_insert
+
+logger = logging.getLogger(__name__)
 
 
-def test_basic():
+def test_last_line():
+    # Call the function that generates the output file
     print("hello world")
-    assert True
+    block_insert.block_insert(
+        source_path="tests/sources/last_line.md",
+        insert_path="tests/snippets",
+        output_path="tests/outputs"
+    )
+
+    # Define paths to the generated and expected files
+    output_file = "tests/outputs/last_line.md"
+    expected_file = "tests/expected/last_line.md"
+
+    # Assert that both files exist
+    assert os.path.exists(output_file), f"Output file not found: {output_file}"
+    assert os.path.exists(expected_file), f"Expected file not found: {expected_file}"
+
+    # Read the contents of both files
+    with open(output_file, "r", encoding="utf-8") as f:
+        output_content = f.read()
+    with open(expected_file, "r", encoding="utf-8") as f:
+        expected_content = f.read()
+
+    # Assert that the contents are identical
+    assert output_content == expected_content, "Generated file content does not match expected content."
 
 
-import pytest
+def test_basic1():
+    # Call the function that generates the output file
+    print("hello world")
+    block_insert.block_insert(
+        source_path="tests/sources/basic.md",
+        insert_path="tests/snippets",
+        output_path="tests/outputs"
+    )
 
+    # Define paths to the generated and expected files
+    output_file = "tests/outputs/basic.md"
+    expected_file = "tests/expected/basic.md"
 
-@pytest.fixture
-def temp_directory(tmp_path):
-    # Create a temporary directory using tmp_path
-    print(f"Temporary directory created: {tmp_path}")
+    # Assert that both files exist
+    assert os.path.exists(output_file), f"Output file not found: {output_file}"
+    assert os.path.exists(expected_file), f"Expected file not found: {expected_file}"
 
-    # Optionally, add files to the directory if needed
-    test_file = tmp_path / "test.txt"
-    test_file.write_text("Testing file access.")
+    # Read the contents of both files
+    with open(output_file, "r", encoding="utf-8") as f:
+        output_content = f.read()
+    with open(expected_file, "r", encoding="utf-8") as f:
+        expected_content = f.read()
 
-    # Yield the temporary directory path to the test
-    yield tmp_path
-
-    # Cleanup happens automatically after the test
-
-
-# Example test using the fixture
-def test_file_access(temp_directory):
-    # Access the temporary directory and file
-    test_file = temp_directory / "test.txt"
-    assert test_file.exists()
-    assert test_file.read_text() == "Testing file access."
+    # Assert that the contents are identical
+    assert output_content == expected_content, "Generated file content does not match expected content."

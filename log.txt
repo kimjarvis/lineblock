@@ -1,0 +1,28 @@
+=== RUN 2026-01-30 11:22:44 ===
+SOURCE: /home/kim/block-insert/tests/sources/basic.md
+INSERT: /home/kim/block-insert/tests/snippets/basic.md [FOUND]
+OUTPUT: /home/kim/block-insert/tests/sources/basic.md.gen.md
+SOURCE: /home/kim/block-insert/tests/sources/basic.md
+INSERT: /home/kim/block-insert/tests/snippets/examples/hello_world.md.generated [NOT FOUND]
+OUTPUT: /home/kim/block-insert/tests/sources/basic.md.gen.md
+Block file '/home/kim/block-insert/tests/snippets/examples/hello_world.md.generated' not found.
+Created file: /home/kim/block-insert/tests/sources/basic.md.gen.md
+
+=== RUN 2026-01-30 11:31:47 ===
+SOURCE: /home/kim/block-insert/tests/sources/basic.md
+INSERT: /home/kim/block-insert/tests/snippets/basic.md [FOUND]
+OUTPUT: /home/kim/block-insert/tests/outputs/basic.md
+Created file: /home/kim/block-insert/tests/outputs/basic.md
+
+=== RUN 2026-01-30 11:32:10 ===
+SOURCE: /home/kim/block-insert/tests/sources/basic.md
+INSERT: /home/kim/block-insert/tests/snippets/basic.md [FOUND]
+OUTPUT: /home/kim/block-insert/tests/outputs/basic.md
+Created file: /home/kim/block-insert/tests/outputs/basic.md
+
+=== RUN 2026-01-30 12:30:25 ===
+SOURCE: /home/kim/block-insert/tests/sources/basic.md
+INSERT: /home/kim/block-insert/tests/snippets/basic.md [FOUND]
+OUTPUT: /home/kim/block-insert/tests/outputs/basic.md
+Created file: /home/kim/block-insert/tests/outputs/basic.md
+
