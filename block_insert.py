@@ -27,7 +27,11 @@ def indent_lines(lines, spaces):
     indented = []
     for line in lines:
         stripped = line.rstrip("\n")
-        indented_line = f"{' ' * max(0, spaces)}{stripped}\n"
+        # Preserve original newline structure
+        if line.endswith("\n"):
+            indented_line = f"{' ' * max(0, spaces)}{stripped}\n"
+        else:
+            indented_line = f"{' ' * max(0, spaces)}{stripped}"
         indented.append(indented_line)
     return indented
 
@@ -136,21 +140,44 @@ def process_file(source_file, insert_path, output_root=None, source_root=None, c
                 output.append(line)
                 changed = True
             else:
+                # Always add the marker line as-is initially
                 replacement = [line]
 
                 try:
                     with open(file_path, "r") as f:
                         block_content = f.readlines()
+
+                    # If the original marker line doesn't end with \n,
+                    # we need to add a newline before the block content for proper formatting
+                    if not line.endswith('\n'):
+                        replacement.append('\n')
+
+                    # Process the block content with proper indentation
+                    # Ensure each line of the inserted content has a newline for proper formatting
                     indented_block = indent_lines(block_content, total_indent)
-                    replacement.extend(indented_block)
+
+                    # For proper formatting, ensure each line of inserted content ends with newline
+                    formatted_indented_block = []
+                    for idx, indented_line in enumerate(indented_block):
+                        stripped_line = indented_line.rstrip('\n')
+                        # Add newline to all lines for proper formatting
+                        formatted_indented_block.append(stripped_line + '\n')
+
+                    replacement.extend(formatted_indented_block)
                 except FileNotFoundError:
                     logger.warning(f"Block file '{file_path}' not found.")
                     print(f"Warning: Block file '{file_path}' not found.")
 
                 if block_type == "python":
-                    replacement.append(f"{' ' * orig_indent}# block end\n")
+                    block_end_tag = f"{' ' * orig_indent}# block end"
                 else:
-                    replacement.append(f"{' ' * orig_indent}<!-- block end -->\n")
+                    block_end_tag = f"{' ' * orig_indent}<!-- block end -->"
+
+                # Only add newline to the block end tag if the original marker line had a newline
+                if line.endswith('\n'):
+                    replacement.append(block_end_tag + "\n")
+                else:
+                    replacement.append(block_end_tag)
 
                 output.extend(replacement)
                 changed = True
