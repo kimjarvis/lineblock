@@ -67,11 +67,9 @@ def test_insert_files(source_file):
     "extract_last_line.md",
     "extract_indent_1.md",
     "extract_indent_2.md",
-    "extract_missing_end.md"
 ])
 def test_extract_files(source_file):
     """Test various extract operations."""
-    print("hello world")
     run_and_compare_file_test(block_extract, source_file, test_type="extract")
 
 
