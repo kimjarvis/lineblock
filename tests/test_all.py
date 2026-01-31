@@ -3,7 +3,7 @@ import logging
 import os
 import pytest
 from block_insert import block_insert
-from block_extract import block_extract, UnclosedBlockError, OrphanedEndMarkerError
+from block_extract import block_extract, UnclosedBlockError, OrphanedExtractEndMarkerError
 
 
 logger = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ def test_insert_orphaned_end_marker():
     """Test when a block end marker appears before any block extract marker."""
     source_path = "tests/sources/insert_orphaned_end_marker.md"
 
-    with pytest.raises(OrphanedEndMarkerError) as exc_info:
+    with pytest.raises(OrphanedExtractEndMarkerError) as exc_info:
         block_extract(
             source_path="tests/sources/insert_orphaned_end_marker.md",
             extract_directory_prefix="tests/snippets"
@@ -122,7 +122,7 @@ def test_extract_orphaned_end_marker():
     """Test when a block end marker appears before any block extract marker."""
     source_path = "tests/sources/extract_orphaned_end_marker.md"
 
-    with pytest.raises(OrphanedEndMarkerError) as exc_info:
+    with pytest.raises(OrphanedExtractEndMarkerError) as exc_info:
         block_extract(
             source_path="tests/sources/extract_orphaned_end_marker.md",
             extract_directory_prefix="tests/snippets"
@@ -153,7 +153,7 @@ def test_extract_nested_markers():
     """Test when a block extract marker appears inside another block (nested)."""
     source_path = "tests/sources/extract_nested_markers.md"
 
-    with pytest.raises(OrphanedEndMarkerError) as exc_info:
+    with pytest.raises(OrphanedExtractEndMarkerError) as exc_info:
         block_extract(
             source_path="tests/sources/extract_nested_markers.md",
             extract_directory_prefix="tests/snippets"

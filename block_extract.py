@@ -1,187 +1,146 @@
-#!/usr/bin/env python3
-
 import argparse
 import re
 from pathlib import Path
 
+from exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
+from common import Common
 
-class UnclosedBlockError(Exception):
-    """Exception raised when a block extract marker is found without a corresponding end marker."""
+class BlockExtract(Common):
+    def __init__(self):
+        pass
 
-    def __init__(self, source_file, line_number, line_content=""):
-        self.source_file = source_file
-        self.line_number = line_number
-        self.line_content = line_content
-        message = (f"Unclosed block starting at line {line_number} "
-                   f"in file '{source_file}'. "
-                   f"Expected end marker '# block end' or '<!-- block end -->'.")
-        super().__init__(message)
+    @staticmethod
+    def is_start_marker(line):
+        s = line.strip()
+        if re.fullmatch(r"#\s*block extract\s+\S+.*", s):
+            return True
+        if re.fullmatch(r"<!--\s*block extract\s+\S+.*-->", s):
+            return True
+        return False
 
-
-class OrphanedEndMarkerError(Exception):
-    """Exception raised when a block end marker is found without a corresponding start marker."""
-
-    def __init__(self, source_file, line_number, line_content=""):
-        self.source_file = source_file
-        self.line_number = line_number
-        self.line_content = line_content
-        message = (f"Orphaned block end marker at line {line_number} "
-                   f"in file '{source_file}'. "
-                   f"No corresponding '# block extract' or '<!-- block extract -->' marker found.")
-        super().__init__(message)
-
-
-def is_start_marker(line):
-    s = line.strip()
-    if re.fullmatch(r"#\s*block extract\s+\S+.*", s):
-        return True
-    if re.fullmatch(r"<!--\s*block extract\s+\S+.*-->", s):
-        return True
-    return False
+    @staticmethod
+    def is_end_marker(line):
+        s = line.strip()
+        if re.fullmatch(r"#\s*block end\s*", s):
+            return True
+        if re.fullmatch(r"<!--\s*block end\s*-->", s):
+            return True
+        return False
 
 
-def is_end_marker(line):
-    s = line.strip()
-    if re.fullmatch(r"#\s*block end\s*", s):
-        return True
-    if re.fullmatch(r"<!--\s*block end\s*-->", s):
-        return True
-    return False
+    @staticmethod
+    def extract_block_info(marker_line, extract_directory_prefix):
+        match = re.match(r"(\s*)#\s*block extract\s+(\S+)(?:\s+(-?\d+))?", marker_line)
+        if match:
+            leading_ws = match.group(1)
+            file_name = match.group(2)
+            extra_indent = int(match.group(3)) if match.group(3) else 0
+            original_indent = len(leading_ws)
+            total_indent = original_indent + extra_indent
+            file_path = Path(extract_directory_prefix) / file_name
+            return file_path, total_indent
 
+        match = re.match(r"(\s*)<!--\s*block extract\s+(\S+)(?:\s+(-?\d+))?\s*-->", marker_line)
+        if match:
+            leading_ws = match.group(1)
+            file_name = match.group(2)
+            extra_indent = int(match.group(3)) if match.group(3) else 0
+            original_indent = len(leading_ws)
+            total_indent = original_indent + extra_indent
+            file_path = Path(extract_directory_prefix) / file_name
+            return file_path, total_indent
 
-def indent_lines(lines, spaces):
-    indented = []
-    for line in lines:
-        stripped = line.rstrip("\n")
-        if spaces >= 0:
-            # Positive indent: add spaces
-            indented_line = f"{' ' * spaces}{stripped}\n"
-        else:
-            # Negative indent: remove spaces from the beginning
-            # Remove up to |spaces| spaces, but not beyond the first non-space character
-            spaces_to_remove = -spaces
-            # Count leading spaces in the original line
-            leading_spaces = len(stripped) - len(stripped.lstrip())
-            # Remove spaces, but not more than what exists
-            remove_count = min(spaces_to_remove, leading_spaces)
-            indented_line = stripped[remove_count:] + "\n"
-        indented.append(indented_line)
-    return indented
+        return None
 
+    def process_file(self, source_file, extract_directory_prefix):
+        try:
+            with open(source_file, "r") as f:
+                original_lines = f.readlines()
+        except FileNotFoundError:
+            print(f"Error: Source file '{source_file}' not found.")
+            return
 
-def extract_block_info(marker_line, extract_directory_prefix):
-    match = re.match(r"(\s*)#\s*block extract\s+(\S+)(?:\s+(-?\d+))?", marker_line)
-    if match:
-        leading_ws = match.group(1)
-        file_name = match.group(2)
-        extra_indent = int(match.group(3)) if match.group(3) else 0
-        original_indent = len(leading_ws)
-        total_indent = original_indent + extra_indent
-        file_path = Path(extract_directory_prefix) / file_name
-        return file_path, total_indent
+        i = 0
+        in_block = False  # Track if we're currently processing a block
+        while i < len(original_lines):
+            line = original_lines[i]
 
-    match = re.match(r"(\s*)<!--\s*block extract\s+(\S+)(?:\s+(-?\d+))?\s*-->", marker_line)
-    if match:
-        leading_ws = match.group(1)
-        file_name = match.group(2)
-        extra_indent = int(match.group(3)) if match.group(3) else 0
-        original_indent = len(leading_ws)
-        total_indent = original_indent + extra_indent
-        file_path = Path(extract_directory_prefix) / file_name
-        return file_path, total_indent
-
-    return None
-
-
-def process_file(source_file, extract_directory_prefix):
-    try:
-        with open(source_file, "r") as f:
-            original_lines = f.readlines()
-    except FileNotFoundError:
-        print(f"Error: Source file '{source_file}' not found.")
-        return
-
-    i = 0
-    in_block = False  # Track if we're currently processing a block
-    while i < len(original_lines):
-        line = original_lines[i]
-
-        if is_end_marker(line):
-            # Check if we have an orphaned end marker
-            if not in_block:
-                raise OrphanedEndMarkerError(source_file, i + 1, line.strip())
-            else:
-                # Found the end of the current block
-                in_block = False
-                i += 1
-                continue
-
-        if is_start_marker(line):
-            # Check if we're already in a block (nested blocks are not allowed)
-            if in_block:
-                # We're trying to start a new block while already in one
-                raise OrphanedEndMarkerError(source_file, i + 1,
-                                             "Found block extract marker without closing previous block.")
-
-            info = extract_block_info(line, extract_directory_prefix)
-            if info:
-                file_path, total_indent = info
-                start_line = i + 1  # 1-based line number for error reporting
-                i += 1
-                block_lines = []
-                in_block = True  # Now we're inside a block
-
-                # Collect lines until we find the corresponding end marker
-                while i < len(original_lines):
-                    current_line = original_lines[i]
-                    if is_end_marker(current_line):
-                        # Found the end marker for this block
-                        in_block = False
-                        break
-                    block_lines.append(current_line)
-                    i += 1
+            if self.is_end_marker(line):
+                # Check if we have an orphaned end marker
+                if not in_block:
+                    raise OrphanedExtractEndMarkerError(source_file, i + 1, line.strip())
                 else:
-                    # Reached end of file without finding end marker
-                    raise UnclosedBlockError(source_file, start_line, line.strip())
+                    # Found the end of the current block
+                    in_block = False
+                    i += 1
+                    continue
 
-                # Check if parent directories exist (don't create them)
-                if not file_path.parent.exists():
-                    raise ValueError(f"Parent directory does not exist for output file: '{file_path}'")
+            if self.is_start_marker(line):
+                # Check if we're already in a block (nested blocks are not allowed)
+                if in_block:
+                    # We're trying to start a new block while already in one
+                    raise OrphanedExtractEndMarkerError(source_file, i + 1,
+                                                        "Found block extract marker without closing previous block.")
 
-                # Write extracted block with indentation
-                indented_lines = indent_lines(block_lines, total_indent)
-                with open(file_path, "w") as out_f:
-                    out_f.writelines(indented_lines)
-        i += 1
+                info = self.extract_block_info(line, extract_directory_prefix)
+                if info:
+                    file_path, total_indent = info
+                    start_line = i + 1  # 1-based line number for error reporting
+                    i += 1
+                    block_lines = []
+                    in_block = True  # Now we're inside a block
 
+                    # Collect lines until we find the corresponding end marker
+                    while i < len(original_lines):
+                        current_line = original_lines[i]
+                        if self.is_end_marker(current_line):
+                            # Found the end marker for this block
+                            in_block = False
+                            break
+                        block_lines.append(current_line)
+                        i += 1
+                    else:
+                        # Reached end of file without finding end marker
+                        raise UnclosedBlockError(source_file, start_line, line.strip())
 
-def process_path(path, extract_directory_prefix):
-    path = Path(path).expanduser().resolve()
-    extract_directory_prefix = Path(extract_directory_prefix).expanduser().resolve()
+                    # Check if parent directories exist (don't create them)
+                    if not file_path.parent.exists():
+                        raise ValueError(f"Parent directory does not exist for output file: '{file_path}'")
 
-    # Raise FileNotFoundError if the source path doesn't exist
-    if not path.exists():
-        raise FileNotFoundError(f"Error: Source path '{path}' does not exist.")
+                    # Write extracted block with indentation
+                    indented_lines = self.indent_lines(block_lines, total_indent)
+                    with open(file_path, "w") as out_f:
+                        out_f.writelines(indented_lines)
+            i += 1
 
-    # Raise FileNotFoundError if the extract directory doesn't exist
-    if not extract_directory_prefix.exists():
-        raise FileNotFoundError(f"Error: Extract path '{extract_directory_prefix}' does not exist.")
+    def process_path(self, path, extract_directory_prefix):
+        path = Path(path).expanduser().resolve()
+        extract_directory_prefix = Path(extract_directory_prefix).expanduser().resolve()
 
-    # Raise an error if extract_directory_prefix exists but is not a directory
-    if not extract_directory_prefix.is_dir():
-        raise NotADirectoryError(f"Error: Extract path '{extract_directory_prefix}' is not a directory.")
+        # Raise FileNotFoundError if the source path doesn't exist
+        if not path.exists():
+            raise FileNotFoundError(f"Error: Source path '{path}' does not exist.")
 
-    if path.is_file():
-        process_file(path, extract_directory_prefix)
-    else:
-        for file in path.rglob("*.py"):
-            process_file(file, extract_directory_prefix)
+        # Raise FileNotFoundError if the extract directory doesn't exist
+        if not extract_directory_prefix.exists():
+            raise FileNotFoundError(f"Error: Extract path '{extract_directory_prefix}' does not exist.")
+
+        # Raise an error if extract_directory_prefix exists but is not a directory
+        if not extract_directory_prefix.is_dir():
+            raise NotADirectoryError(f"Error: Extract path '{extract_directory_prefix}' is not a directory.")
+
+        if path.is_file():
+            self.process_file(path, extract_directory_prefix)
+        else:
+            for file in path.rglob("*.py"):
+                self.process_file(file, extract_directory_prefix)
 
 
 def block_extract(source_path, extract_directory_prefix):
     try:
-        process_path(source_path, extract_directory_prefix)
-    except (UnclosedBlockError, OrphanedEndMarkerError) as e:
+        extractor = BlockExtract()
+        extractor.process_path(source_path, extract_directory_prefix)
+    except (UnclosedBlockError, OrphanedExtractEndMarkerError) as e:
         print(f"Error: {e}")
         raise  # Re-raise to exit with non-zero status
     except (FileNotFoundError, NotADirectoryError, ValueError) as e:
@@ -200,12 +159,14 @@ def main():
 
     try:
         block_extract(source_path=args.source_path, extract_directory_prefix=args.extract_directory_prefix)
-    except (UnclosedBlockError, OrphanedEndMarkerError, FileNotFoundError, NotADirectoryError, ValueError):
+    except (UnclosedBlockError, OrphanedExtractEndMarkerError, FileNotFoundError, NotADirectoryError, ValueError):
         # Exit with non-zero status to indicate error
         exit(1)
     except Exception as e:
         print(f"Fatal error: {e}")
         exit(1)
+
+    return 0
 
 
 if __name__ == "__main__":
