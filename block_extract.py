@@ -31,15 +31,6 @@ class OrphanedEndMarkerError(Exception):
         super().__init__(message)
 
 
-class ParentDirectoryError(Exception):
-    """Exception raised when parent directories for an output file don't exist."""
-
-    def __init__(self, file_path):
-        self.file_path = file_path
-        message = f"Parent directory does not exist for output file: '{file_path}'"
-        super().__init__(message)
-
-
 def is_start_marker(line):
     s = line.strip()
     if re.fullmatch(r"#\s*block extract\s+\S+.*", s):
@@ -155,7 +146,7 @@ def process_file(source_file, extract_path):
 
                 # Check if parent directories exist (don't create them)
                 if not file_path.parent.exists():
-                    raise ParentDirectoryError(file_path)
+                    raise ValueError(f"Parent directory does not exist for output file: '{file_path}'")
 
                 # Write extracted block with indentation
                 indented_lines = indent_lines(block_lines, total_indent)
@@ -190,10 +181,10 @@ def process_path(path, extract_path):
 def block_extract(source_path, extract_path):
     try:
         process_path(source_path, extract_path)
-    except (UnclosedBlockError, OrphanedEndMarkerError, ParentDirectoryError) as e:
+    except (UnclosedBlockError, OrphanedEndMarkerError) as e:
         print(f"Error: {e}")
         raise  # Re-raise to exit with non-zero status
-    except (FileNotFoundError, NotADirectoryError) as e:
+    except (FileNotFoundError, NotADirectoryError, ValueError) as e:
         print(f"Error: {e}")
         raise  # Re-raise to exit with non-zero status
     except Exception as e:
@@ -209,7 +200,7 @@ def main():
 
     try:
         block_extract(source_path=args.source_path, extract_path=args.extract_path)
-    except (UnclosedBlockError, OrphanedEndMarkerError, ParentDirectoryError, FileNotFoundError, NotADirectoryError):
+    except (UnclosedBlockError, OrphanedEndMarkerError, FileNotFoundError, NotADirectoryError, ValueError):
         # Exit with non-zero status to indicate error
         exit(1)
     except Exception as e:
