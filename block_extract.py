@@ -7,13 +7,14 @@ from pathlib import Path
 
 class UnclosedBlockError(Exception):
     """Exception raised when a block extract marker is found without a corresponding end marker."""
+
     def __init__(self, source_file, line_number, line_content=""):
         self.source_file = source_file
         self.line_number = line_number
         self.line_content = line_content
         message = (f"Unclosed block starting at line {line_number} "
-                  f"in file '{source_file}'. "
-                  f"Expected end marker '# block end' or '<!-- block end -->'.")
+                   f"in file '{source_file}'. "
+                   f"Expected end marker '# block end' or '<!-- block end -->'.")
         super().__init__(message)
 
 
@@ -121,12 +122,17 @@ def process_path(path, extract_path):
     path = Path(path).expanduser().resolve()
     extract_path = Path(extract_path).expanduser().resolve()
 
+    # Raise FileNotFoundError if the source path doesn't exist
     if not path.exists():
-        print(f"Error: Source path '{path}' does not exist.")
-        return
+        raise FileNotFoundError(f"Error: Source path '{path}' does not exist.")
+
+    # Raise FileNotFoundError if the extract directory doesn't exist
+    if not extract_path.exists():
+        raise FileNotFoundError(f"Error: Extract path '{extract_path}' does not exist.")
+
+    # Raise an error if extract_path exists but is not a directory
     if not extract_path.is_dir():
-        print(f"Error: Extract path '{extract_path}' is not a directory.")
-        return
+        raise NotADirectoryError(f"Error: Extract path '{extract_path}' is not a directory.")
 
     if path.is_file():
         process_file(path, extract_path)
@@ -139,6 +145,9 @@ def block_extract(source_path, extract_path):
     try:
         process_path(source_path, extract_path)
     except UnclosedBlockError as e:
+        print(f"Error: {e}")
+        raise  # Re-raise to exit with non-zero status
+    except (FileNotFoundError, NotADirectoryError) as e:
         print(f"Error: {e}")
         raise  # Re-raise to exit with non-zero status
     except Exception as e:
@@ -154,7 +163,7 @@ def main():
 
     try:
         block_extract(source_path=args.source_path, extract_path=args.extract_path)
-    except UnclosedBlockError:
+    except (UnclosedBlockError, FileNotFoundError, NotADirectoryError):
         # Exit with non-zero status to indicate error
         exit(1)
     except Exception as e:
