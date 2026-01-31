@@ -1,26 +1,6 @@
-# block insert copyright_header
-# Copyright (C) 2026 Kim Jarvis TPF Software Services S.A. kim.jarvis@tpfsystems.com
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/    >.
-# block end
 import argparse
 import re
-import logging
 from pathlib import Path
-from datetime import datetime
-
-# Module-level logger – callers can configure it externally
-logger = logging.getLogger(__name__)
 
 
 def indent_lines(lines, spaces):
@@ -89,7 +69,6 @@ def process_file(source_file, insert_path, output_root=None, source_root=None, c
         with open(source_file, "r") as f:
             original_lines = f.readlines()
     except FileNotFoundError:
-        logger.error(f"Source file '{source_file}' not found.")
         print(f"Error: Source file '{source_file}' not found.")
         return
 
@@ -120,14 +99,7 @@ def process_file(source_file, insert_path, output_root=None, source_root=None, c
             file_path, total_indent, orig_indent, block_type = info
             file_exists = file_path.exists()
 
-            # Log block processing details
-            status = "FOUND" if file_exists else "NOT FOUND"
-            logger.debug(f"SOURCE: {source_path}")
-            logger.debug(f"INSERT: {file_path} [{status}]")
-            logger.debug(f"OUTPUT: {output_path}")
-
             if not file_exists:
-                logger.warning(f"Block file '{file_path}' not found.")
                 print(f"Warning: Block file '{file_path}' not found.")
                 output.append(line)
                 i += 1
@@ -171,7 +143,6 @@ def process_file(source_file, insert_path, output_root=None, source_root=None, c
 
                     replacement.extend(formatted_indented_block)
                 except FileNotFoundError:
-                    logger.warning(f"Block file '{file_path}' not found.")
                     print(f"Warning: Block file '{file_path}' not found.")
 
                 if block_type == "python":
@@ -203,7 +174,6 @@ def process_file(source_file, insert_path, output_root=None, source_root=None, c
         with open(output_path, "w") as f:
             f.writelines(output)
         action = "Created" if output_root else "Updated"
-        logger.info(f"{action} file: {output_path}")
         print(f"{action} file: {output_path}")
 
 
@@ -212,11 +182,9 @@ def process_path(source_path, insert_path, output_path=None, clear_mode=False):
     insert_path = Path(insert_path).expanduser().resolve()
 
     if not source_path.exists():
-        logger.error(f"Source path '{source_path}' does not exist.")
         print(f"Error: Source path '{source_path}' does not exist.")
         return
     if not insert_path.is_dir():
-        logger.error(f"Insert path '{insert_path}' is not a directory.")
         print(f"Error: Insert path '{insert_path}' is not a directory.")
         return
 
@@ -228,14 +196,12 @@ def process_path(source_path, insert_path, output_path=None, clear_mode=False):
     # Prevent processing files inside output directory when scanning source directory
     if source_path.is_dir() and output_root:
         if output_root.resolve() in source_path.resolve().parents or output_root == source_path.resolve():
-            logger.error(f"Output path '{output_root}' must not be inside or equal to source path '{source_path}'")
             print(f"Error: Output path must not be inside or equal to source path")
             return
 
     if source_path.is_file():
         # Skip if this file is inside the output directory (prevent recursive processing)
         if output_root and source_path.resolve().parent == output_root.resolve():
-            logger.debug(f"Skipping file in output directory: {source_path}")
             return
         process_file(source_path, insert_path, output_root=output_root, clear_mode=clear_mode)
     else:
@@ -261,11 +227,6 @@ def block_insert(source_path: str, insert_path: str, output_path: str = None, cl
         output_path (str, optional): Directory where generated files will be written.
             If None, source files are modified in-place.
         clear_mode (bool): Clear blocks without insertion.
-
-    Note:
-        This function uses the standard logging module. Callers should configure
-        logging externally (e.g., via logging.basicConfig) if log output is desired.
-        No log file is created automatically by this function.
     """
     process_path(source_path, insert_path, output_path, clear_mode)
 
@@ -279,26 +240,13 @@ def main():
     parser.add_argument("--clear", action="store_true", help="Clear blocks without insertion.")
     args = parser.parse_args()
 
-    # CLI-specific: configure logging to log.txt with minimal formatting
-    log_handler = logging.FileHandler("log.txt", mode="a")
-    log_handler.setFormatter(logging.Formatter("%(message)s"))
-    logger.addHandler(log_handler)
-    logger.setLevel(logging.DEBUG)
-
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    logger.info(f"=== RUN {timestamp} ===")
-
-    # Execute block insertion with logging active
+    # Execute block insertion
     block_insert(
         source_path=args.source_path,
         insert_path=args.insert_path,
         output_path=args.output_path,
         clear_mode=args.clear
     )
-
-    logger.info("")  # Blank line between runs
-    logger.removeHandler(log_handler)
-    log_handler.close()
 
 
 if __name__ == "__main__":
