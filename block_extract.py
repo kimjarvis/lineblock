@@ -18,6 +18,19 @@ class UnclosedBlockError(Exception):
         super().__init__(message)
 
 
+class OrphanedEndMarkerError(Exception):
+    """Exception raised when a block end marker is found without a corresponding start marker."""
+
+    def __init__(self, source_file, line_number, line_content=""):
+        self.source_file = source_file
+        self.line_number = line_number
+        self.line_content = line_content
+        message = (f"Orphaned block end marker at line {line_number} "
+                   f"in file '{source_file}'. "
+                   f"No corresponding '# block extract' or '<!-- block extract -->' marker found.")
+        super().__init__(message)
+
+
 def is_start_marker(line):
     s = line.strip()
     if re.fullmatch(r"#\s*block extract\s+\S+.*", s):
@@ -89,18 +102,41 @@ def process_file(source_file, extract_path):
         return
 
     i = 0
+    in_block = False  # Track if we're currently processing a block
     while i < len(original_lines):
         line = original_lines[i]
+
+        if is_end_marker(line):
+            # Check if we have an orphaned end marker
+            if not in_block:
+                raise OrphanedEndMarkerError(source_file, i + 1, line.strip())
+            else:
+                # Found the end of the current block
+                in_block = False
+                i += 1
+                continue
+
         if is_start_marker(line):
+            # Check if we're already in a block (nested blocks are not allowed)
+            if in_block:
+                # We're trying to start a new block while already in one
+                raise OrphanedEndMarkerError(source_file, i + 1,
+                                             "Found block extract marker without closing previous block.")
+
             info = extract_block_info(line, extract_path)
             if info:
                 file_path, total_indent = info
                 start_line = i + 1  # 1-based line number for error reporting
                 i += 1
                 block_lines = []
+                in_block = True  # Now we're inside a block
+
+                # Collect lines until we find the corresponding end marker
                 while i < len(original_lines):
                     current_line = original_lines[i]
                     if is_end_marker(current_line):
+                        # Found the end marker for this block
+                        in_block = False
                         break
                     block_lines.append(current_line)
                     i += 1
@@ -144,7 +180,7 @@ def process_path(path, extract_path):
 def block_extract(source_path, extract_path):
     try:
         process_path(source_path, extract_path)
-    except UnclosedBlockError as e:
+    except (UnclosedBlockError, OrphanedEndMarkerError) as e:
         print(f"Error: {e}")
         raise  # Re-raise to exit with non-zero status
     except (FileNotFoundError, NotADirectoryError) as e:
@@ -163,7 +199,7 @@ def main():
 
     try:
         block_extract(source_path=args.source_path, extract_path=args.extract_path)
-    except (UnclosedBlockError, FileNotFoundError, NotADirectoryError):
+    except (UnclosedBlockError, OrphanedEndMarkerError, FileNotFoundError, NotADirectoryError):
         # Exit with non-zero status to indicate error
         exit(1)
     except Exception as e:

@@ -3,7 +3,7 @@ import logging
 import os
 import pytest
 from block_insert import block_insert
-from block_extract import block_extract, UnclosedBlockError
+from block_extract import block_extract, UnclosedBlockError, OrphanedEndMarkerError
 
 
 logger = logging.getLogger(__name__)
@@ -90,7 +90,7 @@ def test_done_already():
 
 
 
-def test_extract_missing_end():
+def test_unclosed_block():
     """Test that an UnclosedBlockError is raised when a block has no end marker."""
     # Using pytest.raises to assert that the exception is raised
     with pytest.raises(UnclosedBlockError) as exc_info:
@@ -102,3 +102,51 @@ def test_extract_missing_end():
     # Optional: Verify exception details
     assert exc_info.value.line_number == 2  # Assuming the block starts on line 2
     assert "Unclosed block" in str(exc_info.value)
+
+
+def test_extract_orphaned_end_marker():
+    """Test when a block end marker appears before any block extract marker."""
+    source_path = "tests/sources/extract_orphaned_end_marker.md"
+
+    with pytest.raises(OrphanedEndMarkerError) as exc_info:
+        block_extract(
+            source_path="tests/sources/extract_orphaned_end_marker.md",
+            extract_path="tests/snippets"
+        )
+
+    assert "Orphaned block end marker" in str(exc_info.value)
+    assert "extract_orphaned_end_marker.md" in str(exc_info.value)
+    # Should mention line 2 (since line numbers are 1-based)
+    assert "line 2" in str(exc_info.value) or "at line" in str(exc_info.value)
+
+
+def test_extract_orphaned_begin_marker():
+    """Test when a block extract marker has no corresponding end marker."""
+    source_path = "tests/sources/extract_orphaned_begin_marker.md"
+
+    with pytest.raises(UnclosedBlockError) as exc_info:
+        block_extract(
+            source_path="tests/sources/extract_orphaned_begin_marker.md",
+            extract_path="tests/snippets"
+        )
+
+    assert "Unclosed block" in str(exc_info.value)
+    assert "extract_orphaned_begin_marker.md" in str(exc_info.value)
+    assert "Expected end marker" in str(exc_info.value)
+
+
+def test_extract_nested_markers():
+    """Test when a block extract marker appears inside another block (nested)."""
+    source_path = "tests/sources/extract_nested_markers.md"
+
+    with pytest.raises(OrphanedEndMarkerError) as exc_info:
+        block_extract(
+            source_path="tests/sources/extract_nested_markers.md",
+            extract_path="tests/snippets"
+        )
+
+    # Verify error message contains expected information
+    assert "Orphaned block end marker" in str(exc_info.value)
+    assert "extract_nested_markers.md" in str(exc_info.value)
+    # The error should occur at the second block extract marker (line 3)
+    assert "line 3" in str(exc_info.value) or "at line" in str(exc_info.value)
