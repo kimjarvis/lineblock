@@ -1,7 +1,11 @@
-import argparse
+"""
+CLI entry point for the lineblock package.
+"""
+
 from lineblock.block_extract import BlockExtract
 from lineblock.block_insert import BlockInsert
 from lineblock.exceptions import UnclosedBlockError, OrphanedExtractEndMarkerError
+import argparse
 
 
 def lineblocks(action: str,
@@ -57,33 +61,39 @@ def main():
         description="Insert or extract code blocks based on markers in Python/Markdown files."
     )
 
-    # Positional action argument
-    parser.add_argument(
-        "action",
-        choices=["insert", "extract"],
-        help="Action to perform: 'insert' to insert code blocks, 'extract' to extract them."
-    )
+    # Create subparsers for different actions
+    subparsers = parser.add_subparsers(dest='action', help='Available actions', required=True)
 
-    # Common arguments group
-    common_group = parser.add_argument_group('Common arguments')
-    common_group.add_argument(
+    # Extract subparser
+    extract_parser = subparsers.add_parser('extract', help='Extract code blocks from source files')
+    extract_parser.add_argument(
         "--source",
         required=True,
         help="Source file to process."
     )
-    common_group.add_argument(
+    extract_parser.add_argument(
         "--prefix",
         default=".",  # Set default prefix to "."
         help="Base path for block files (default: '.')."
     )
 
-    # Insert-specific arguments group
-    insert_group = parser.add_argument_group('Insert-specific arguments')
-    insert_group.add_argument(
+    # Insert subparser
+    insert_parser = subparsers.add_parser('insert', help='Insert code blocks into source files')
+    insert_parser.add_argument(
+        "--source",
+        required=True,
+        help="Source file to process."
+    )
+    insert_parser.add_argument(
+        "--prefix",
+        default=".",  # Set default prefix to "."
+        help="Base path for block files (default: '.')."
+    )
+    insert_parser.add_argument(
         "--output",
         help="Directory for generated files (preserves structure). If omitted, modifies sources in-place."
     )
-    insert_group.add_argument(
+    insert_parser.add_argument(
         "--clear",
         action="store_true",
         help="Clear blocks without insertion (insert action only)."
@@ -91,19 +101,14 @@ def main():
 
     args = parser.parse_args()
 
-    # Validate action-specific arguments
-    if args.action == "extract":
-        if args.output or args.clear:
-            parser.error("--output and --clear should not be specified for extract action")
-
     try:
         # Call the unified function
         lineblocks(
             action=args.action,
             source=args.source,
             prefix=args.prefix,
-            output=args.output,
-            clear=args.clear
+            output=getattr(args, 'output', None),
+            clear=getattr(args, 'clear', False)
         )
     except (UnclosedBlockError, OrphanedExtractEndMarkerError,
             FileNotFoundError, NotADirectoryError, ValueError) as e:
@@ -114,7 +119,3 @@ def main():
         exit(1)
 
     return 0
-
-
-if __name__ == "__main__":
-    main()
