@@ -1,18 +1,15 @@
 # Lineblocks
 
-Lineblocks is a documentation synchronization tool that maintains consistency between code examples and their corresponding documentation.
+Lineblocks is a tool that keeps code documentation in sync with source code.
 
-Primary Use Case: Keeping Code Documentation Up to Date
+Primary Use Case: Maintaining Code Documentation
 
-The tool addresses the common problem where documentation becomes outdated as code evolves. Developers often copy-paste code examples into documentation, but when the source code changes, these examples quickly become inaccurate. This program solves this by:
+It solves the issue of outdated documentation by:
 
-- Single Source of Truth: Code examples are stored in actual source files, not duplicated in documentation
-
-- Automatic Synchronization: Running this program updates all documentation with the latest code examples
-
-- Consistent Formatting: Maintains proper indentation and structure when inserting code blocks
-
-- Error Detection: Identifies orphaned markers and missing files to prevent broken documentation
+- Storing code examples in source files (single source of truth)
+- Automatically updating documentation with latest code
+- Preserving formatting during code insertion
+- Detecting errors like missing files or markers
 
 # Installation 
 
@@ -21,11 +18,12 @@ pipx install lineblock
 ```
 # Usage
 
-Add markers to the source code
+Add markers to our source code. 
 
 ```python
+# examples/test_factorial.py
 import pytest
-# block extract factorial.md 4 ```python
+# block extract examples/factorial_example.md 4 ```python
 def factorial(n):
     if n == 0 or n == 1:
         return 1
@@ -35,22 +33,22 @@ def test_factorial():
     assert factorial(5) == 120
 ```
 
-Add markers to indicate where code examples should be inserted.
+Add markers to your documentation to indicate where code examples should be inserted.
 
 ```
 <!-- block insert factorial.md -->
 ```
 
-Run the extraction process to extract code examples from your source code.
+Extract code example from your source code.
 
 ```bash
-lineblock extract --source=test_factorial.py
+lineblock extract --source=examples/test_factorial.py
 ```
 
-Run the insertion process to insert code examples into your documentation.
+Insert the code example into your documentation.
 
 ```bash
-lineblock insert --source=factorial.md
+lineblock insert --source=examples/factorial.md
 ```
 
 

@@ -1,5 +1,5 @@
 # Byte-compiled / optimized / DLL files
-factorial_example.md
+examples/factorial_example.md
 /tests/output/
 __pycache__/
 *.py[codz]
