@@ -1,9 +1,9 @@
-import argparse
 import re
 from pathlib import Path
 
-from lineblocks.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
 from lineblocks.common import Common
+from lineblocks.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
+
 
 class BlockExtract(Common):
     def __init__(self):
@@ -21,34 +21,51 @@ class BlockExtract(Common):
     @staticmethod
     def is_end_marker(line):
         s = line.strip()
-        if re.fullmatch(r"#\s*end extract\s*", s):
-            return True
-        if re.fullmatch(r"<!--\s*end extract\s*-->", s):
-            return True
-        return False
 
+        # Match Python-style comment with optional suffix
+        match = re.fullmatch(r"#\s*end extract\s*(.*)", s)
+        if match:
+            suffix = match.group(1).strip()
+            return True, suffix
 
+        # Match HTML comment with optional suffix before closing -->
+        match = re.fullmatch(r"<!--\s*end extract\s*(.*?)\s*-->", s)
+        if match:
+            suffix = match.group(1).strip()
+            return True, suffix
+
+        return False, ""
     @staticmethod
     def extract_block_info(marker_line, extract_directory_prefix):
-        match = re.match(r"(\s*)#\s*block extract\s+(\S+)(?:\s+(-?\d+))?", marker_line)
+        # Pattern: leading_ws + "# block extract" + filename + [optional indent] + [optional suffix]
+        match = re.match(
+            r"(\s*)#\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(.*))?",
+            marker_line
+        )
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
             extra_indent = int(match.group(3)) if match.group(3) else 0
+            suffix = match.group(4) if match.group(4) else ""
             original_indent = len(leading_ws)
-            total_indent = original_indent + extra_indent
+            total_indent = original_indent + extra_indent  # maintains current "extra indent" behavior
             file_path = Path(extract_directory_prefix) / file_name
-            return file_path, total_indent
+            return file_path, total_indent, suffix
 
-        match = re.match(r"(\s*)<!--\s*block extract\s+(\S+)(?:\s+(-?\d+))?\s*-->", marker_line)
+        # HTML comment variant
+        match = re.match(
+            r"(\s*)<!--\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(.*))?\s*-->",
+            marker_line
+        )
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
             extra_indent = int(match.group(3)) if match.group(3) else 0
+            suffix = match.group(4) if match.group(4) else ""
             original_indent = len(leading_ws)
             total_indent = original_indent + extra_indent
             file_path = Path(extract_directory_prefix) / file_name
-            return file_path, total_indent
+            return file_path, total_indent, suffix
 
         return None
 
@@ -62,15 +79,20 @@ class BlockExtract(Common):
 
         i = 0
         in_block = False  # Track if we're currently processing a block
+        pre = ""
+        post = ""
         while i < len(original_lines):
             line = original_lines[i]
 
-            if self.is_end_marker(line):
+            if self.is_end_marker(line)[0]:
                 # Check if we have an orphaned end marker
                 if not in_block:
                     raise OrphanedExtractEndMarkerError(source_file, i + 1, line.strip())
                 else:
                     # Found the end of the current block
+                    _, suffix = self.is_end_marker(line)
+                    print(f"debug 01 >{suffix}<")
+                    post = suffix
                     in_block = False
                     i += 1
                     continue
@@ -84,7 +106,9 @@ class BlockExtract(Common):
 
                 info = self.extract_block_info(line, extract_directory_prefix)
                 if info:
-                    file_path, total_indent = info
+                    file_path, total_indent, suffix = info
+                    print(f"debug 00 >{suffix}<")
+                    pre = suffix
                     start_line = i + 1  # 1-based line number for error reporting
                     i += 1
                     block_lines = []
@@ -93,8 +117,11 @@ class BlockExtract(Common):
                     # Collect lines until we find the corresponding end marker
                     while i < len(original_lines):
                         current_line = original_lines[i]
-                        if self.is_end_marker(current_line):
+                        if self.is_end_marker(current_line)[0]:
                             # Found the end marker for this block
+                            _, suffix = self.is_end_marker(current_line)
+                            print(f"debug 02 >{suffix}<")
+                            post = suffix
                             in_block = False
                             break
                         block_lines.append(current_line)
@@ -110,7 +137,11 @@ class BlockExtract(Common):
                     # Write extracted block with indentation
                     indented_lines = self.indent_lines(block_lines, total_indent)
                     with open(file_path, "w") as out_f:
+                        if pre != "":
+                            out_f.write(pre + "\n")
                         out_f.writelines(indented_lines)
+                        if post != "":
+                            out_f.write(post + "\n")
             i += 1
 
     def process_path(self, path, extract_directory_prefix):
@@ -149,5 +180,3 @@ def block_extract(source_path, extract_directory_prefix):
     except Exception as e:
         print(f"Unexpected error: {e}")
         raise
-
-
