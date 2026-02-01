@@ -1,3 +1,0 @@
-before
-<!-- end extract -->
-after
