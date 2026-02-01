@@ -44,13 +44,13 @@ Add markers to indicate where code examples should be inserted.
 Run the extraction process to extract code examples from your source code.
 
 ```bash
-lineblock extract --source=test_factorial.py --prefix=.
+lineblock extract --source=test_factorial.py
 ```
 
 Run the insertion process to insert code examples into your documentation.
 
 ```bash
-lineblock insert --source=factorial.md --prefix=.
+lineblock insert --source=factorial.md
 ```
 
 

@@ -73,8 +73,8 @@ def main():
     )
     common_group.add_argument(
         "--prefix",
-        required=True,
-        help="Base path for block files (required for both actions)."
+        default=".",  # Set default prefix to "."
+        help="Base path for block files (default: '.')."
     )
 
     # Insert-specific arguments group
