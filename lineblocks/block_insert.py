@@ -19,9 +19,9 @@ class BlockInsert(Common):
     @staticmethod
     def is_end_marker(line):
         s = line.strip()
-        if re.fullmatch(r"#\s*block end\s*", s):
+        if re.fullmatch(r"#\s*end insert\s*", s):
             return True
-        if re.fullmatch(r"<!--\s*block end\s*-->", s):
+        if re.fullmatch(r"<!--\s*end insert\s*-->", s):
             return True
         return False
 
@@ -146,9 +146,9 @@ class BlockInsert(Common):
                         print(f"Warning: Block file '{file_path}' not found.")
 
                     if block_type == "python":
-                        block_end_tag = f"{' ' * orig_indent}# block end"
+                        block_end_tag = f"{' ' * orig_indent}# end insert"
                     else:
-                        block_end_tag = f"{' ' * orig_indent}<!-- block end -->"
+                        block_end_tag = f"{' ' * orig_indent}<!-- end insert -->"
 
                     # Only add newline to the block end tag if the original marker line had a newline
                     if line.endswith('\n'):

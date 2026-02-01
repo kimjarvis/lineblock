@@ -1,3 +1,3 @@
 before
-<!-- block end -->
+<!-- end insert -->
 after

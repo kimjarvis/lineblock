@@ -2,7 +2,7 @@
 import logging
 import os
 import pytest
-from lineblocks.block_insert import block_insert
+from lineblocks.block_insert import block_insert, OrphanedInsertEndMarkerError
 from lineblocks.block_extract import block_extract, UnclosedBlockError, OrphanedExtractEndMarkerError
 
 
@@ -91,7 +91,7 @@ def test_insert_orphaned_end_marker():
     """Test when a block end marker appears before any block extract marker."""
     source_path = "tests/sources/insert_orphaned_end_marker.md"
 
-    with pytest.raises(OrphanedExtractEndMarkerError) as exc_info:
+    with pytest.raises(OrphanedInsertEndMarkerError) as exc_info:
         block_extract(
             source_path="tests/sources/insert_orphaned_end_marker.md",
             extract_directory_prefix="tests/snippets"

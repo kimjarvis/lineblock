@@ -21,9 +21,9 @@ class BlockExtract(Common):
     @staticmethod
     def is_end_marker(line):
         s = line.strip()
-        if re.fullmatch(r"#\s*block end\s*", s):
+        if re.fullmatch(r"#\s*end extract\s*", s):
             return True
-        if re.fullmatch(r"<!--\s*block end\s*-->", s):
+        if re.fullmatch(r"<!--\s*end extract\s*-->", s):
             return True
         return False
 
