@@ -27,8 +27,8 @@ Add markers to the source code
 def test_lineblocks():
     # block extract test.txt
     import lineblock
-    lineblock("extract", source=README.md, prefix=".")
-    lineblock("insert", source=".", prefix=".")
+    lineblock.lineblocks("extract", source="README.md", prefix=".")
+    lineblock.lineblocks("insert", source=".", prefix=".")
     # end extract
 ```
 
@@ -61,13 +61,13 @@ In your documentation, add markers to indicate where code examples should be ins
 Run the extraction process to create the file test.txt
 
 ```bash
-linebocks extract --source=README.md --prefix=.
+lineblock extract --source=README.md --prefix=.
 ```
 
 Run the insertion process to insert the code examples into your documentation.
 
 ```bash
-linebocks insert --source=README.md --prefix=.
+lineblock insert --source=. --prefix=.
 ```
 
 
