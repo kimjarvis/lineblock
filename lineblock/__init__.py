@@ -11,7 +11,7 @@ from .block_insert import BlockInsert
 from .exceptions import UnclosedBlockError, OrphanedExtractEndMarkerError
 
 # Import main function for CLI usage
-from .cli import main, lineblocks
+from .cli import main, lineblock
 
 __version__ = "0.0.1"
 __author__ = "Kim Jarvis"
@@ -22,5 +22,5 @@ __all__ = [
     'UnclosedBlockError',
     'OrphanedExtractEndMarkerError',
     'main',
-    'lineblocks'
+    'lineblock'
 ]

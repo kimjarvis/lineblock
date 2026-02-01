@@ -8,7 +8,7 @@ from lineblock.exceptions import UnclosedBlockError, OrphanedExtractEndMarkerErr
 import argparse
 
 
-def lineblocks(action: str,
+def lineblock(action: str,
                source: str = None,
                prefix: str = None,
                output: str = None,
@@ -103,7 +103,7 @@ def main():
 
     try:
         # Call the unified function
-        lineblocks(
+        lineblock(
             action=args.action,
             source=args.source,
             prefix=args.prefix,
