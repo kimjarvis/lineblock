@@ -1,8 +1,8 @@
 import re
 from pathlib import Path
 
-from lineblocks.common import Common
-from lineblocks.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
+from lineblock.common import Common
+from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
 
 
 class BlockExtract(Common):

@@ -1,5 +1,5 @@
 [project]
-name = "lineblocks"
+name = "lineblock"
 version = "0.0.1"
 description = "Lineblocks is a documentation synchronization tool that maintains consistency between code examples and their corresponding documentation."
 readme = "README.md"
@@ -26,7 +26,7 @@ build-backend = "flit_core.buildapi"
 
 # Include additional files in the package
 [tool.flit.module]
-name = "lineblocks"
+name = "lineblock"
 
 [tool.flit.sdist]
 include = [
@@ -36,10 +36,10 @@ include = [
 
 [project.urls]
 Homepage = "http://reemote.org/index.html"
-Documentation = "https://github.com/kimjarvis/lineblocks"
-"Source Code" = "https://github.com/kimjarvis/lineblocks"
-"Bug Tracker" = "https://github.com/kimjarvis/lineblocks/issues"
+Documentation = "https://github.com/kimjarvis/lineblock"
+"Source Code" = "https://github.com/kimjarvis/lineblock"
+"Bug Tracker" = "https://github.com/kimjarvis/lineblock/issues"
 
 [project.scripts]
-reemote = "lineblocks.module:main"
+reemote = "lineblock.module:main"
 

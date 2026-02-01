@@ -2,8 +2,8 @@
 import logging
 import os
 import pytest
-from lineblocks.block_insert import block_insert, OrphanedInsertEndMarkerError
-from lineblocks.block_extract import block_extract, UnclosedBlockError, OrphanedExtractEndMarkerError
+from lineblock.block_insert import block_insert, OrphanedInsertEndMarkerError
+from lineblock.block_extract import block_extract, UnclosedBlockError, OrphanedExtractEndMarkerError
 
 
 logger = logging.getLogger(__name__)

@@ -17,7 +17,7 @@ The tool addresses the common problem where documentation becomes outdated as co
 # Installation 
 
 ```bash
-pipx install lineblocks
+pipx install lineblock
 ```
 # Usage
 
@@ -26,9 +26,9 @@ Add markers to the source code
 ```python
 def test_lineblocks():
     # block extract test.txt
-    import lineblocks
-    lineblocks("extract",source=README.md,prefix=".")
-    lineblocks("insert",source=".",prefix=".")
+    import lineblock
+    lineblock("extract", source=README.md, prefix=".")
+    lineblock("insert", source=".", prefix=".")
     # end extract
 ```
 
