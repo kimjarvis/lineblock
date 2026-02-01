@@ -18,7 +18,7 @@ pipx install lineblock
 ```
 # Usage
 
-Add markers to our source code. 
+Add markers to the code that tests your example. 
 
 ```python
 # examples/test_factorial.py
@@ -33,22 +33,31 @@ def test_factorial():
     assert factorial(5) == 120
 ```
 
-Add markers to your documentation to indicate where code examples should be inserted.
+Add markers to your documentation to indicate where code example should be inserted.
 
 ```
 <!-- block insert factorial.md -->
 ```
 
-Extract code example from your source code.
+Extract the tested code example from source.
 
 ```bash
 lineblock extract --source=examples/test_factorial.py
 ```
 
-Insert the code example into your documentation.
+Insert the example into your documentation.
 
 ```bash
 lineblock insert --source=examples/factorial.md
 ```
+
+The default block start and end markers are for source code in python and documentation in markdown.
+Adapt block markers to other languages and documentation formats by specifying regular expressions.
+
+Use the `lineblock` function to automate document generation.
+
+
+
+
 
 

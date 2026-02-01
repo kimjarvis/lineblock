@@ -35,6 +35,7 @@ class BlockExtract(Common):
             return True, suffix
 
         return False, ""
+
     @staticmethod
     def extract_block_info(marker_line, extract_directory_prefix):
         # Pattern: leading_ws + "# block extract" + filename + [optional indent] + [optional suffix]
@@ -91,7 +92,6 @@ class BlockExtract(Common):
                 else:
                     # Found the end of the current block
                     _, suffix = self.is_end_marker(line)
-                    print(f"debug 01 >{suffix}<")
                     post = suffix
                     in_block = False
                     i += 1
@@ -107,7 +107,6 @@ class BlockExtract(Common):
                 info = self.extract_block_info(line, extract_directory_prefix)
                 if info:
                     file_path, total_indent, suffix = info
-                    print(f"debug 00 >{suffix}<")
                     pre = suffix
                     start_line = i + 1  # 1-based line number for error reporting
                     i += 1
@@ -120,7 +119,6 @@ class BlockExtract(Common):
                         if self.is_end_marker(current_line)[0]:
                             # Found the end marker for this block
                             _, suffix = self.is_end_marker(current_line)
-                            print(f"debug 02 >{suffix}<")
                             post = suffix
                             in_block = False
                             break
@@ -167,7 +165,13 @@ class BlockExtract(Common):
                 self.process_file(file, extract_directory_prefix)
 
 
-def block_extract(source_path, extract_directory_prefix):
+def block_extract(source_path: str,
+                  extract_directory_prefix: str,
+                  extract_begin_prefix: str = None,
+                  extract_begin_suffix: str = None,
+                  extract_end_prefix: str = None,
+                  extract_end_suffix: str = None,
+                  ):
     try:
         extractor = BlockExtract()
         extractor.process_path(source_path, extract_directory_prefix)

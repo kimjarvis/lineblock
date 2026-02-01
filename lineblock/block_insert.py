@@ -1,9 +1,8 @@
-import argparse
 import re
 from pathlib import Path
 
-from lineblock.exceptions import OrphanedInsertEndMarkerError
 from lineblock.common import Common
+from lineblock.exceptions import OrphanedInsertEndMarkerError
 
 
 class BlockInsert(Common):
@@ -24,7 +23,6 @@ class BlockInsert(Common):
         if re.fullmatch(r"<!--\s*end insert\s*-->", s):
             return True
         return False
-
 
     @staticmethod
     def extract_block_info(marker_line, insert_directory_prefix):
@@ -228,8 +226,15 @@ class BlockInsert(Common):
         BlockInsert.process_file(source_file, insert_directory_prefix, output_root=output_root, clear_mode=clear_mode)
 
 
-def block_insert(source_file: str, insert_directory_prefix: str, output_directory: str = None,
-                 clear_mode: bool = False):
+def block_insert(source_file: str,
+                 insert_directory_prefix: str,
+                 output_directory: str = None,
+                 clear_mode: bool = False,
+                 insert_begin_prefix: str = None,
+                 insert_begin_suffix: str = None,
+                 insert_end_prefix: str = None,
+                 insert_end_suffix: str = None,
+                 ):
     """Insert code blocks into Python/Markdown files based on markers.
     """
     try:
@@ -240,5 +245,3 @@ def block_insert(source_file: str, insert_directory_prefix: str, output_director
     except Exception as e:
         print(f"Unexpected error: {e}")
         raise
-
-
