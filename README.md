@@ -24,50 +24,33 @@ pipx install lineblock
 Add markers to the source code
 
 ```python
-def test_lineblocks():
-    # block extract test.txt
-    import lineblock
-    lineblock.lineblocks("extract", source="README.md", prefix=".")
-    lineblock.lineblocks("insert", source=".", prefix=".")
-    # end extract
+import pytest
+# block extract factorial.md 4 ```python
+def factorial(n):
+    if n == 0 or n == 1:
+        return 1
+    return n * factorial(n - 1)
+# end extract ```
+def test_factorial():
+    assert factorial(5) == 120
 ```
 
-In your documentation, add markers to indicate where code examples should be inserted.
+Add markers to indicate where code examples should be inserted.
 
-%% markdown %%
-
-```python
-%% markdown %%
+```
+<!-- block insert factorial.md -->
 ```
 
-
-```python
-<!-- block insert test.txt -->
-        """Test when a block extract marker has no corresponding end marker."""
-        source_path = "tests/sources/extract_orphaned_begin_marker.md"
-    
-        with pytest.raises(UnclosedBlockError) as exc_info:
-            block_extract(
-                source_path="tests/sources/extract_orphaned_begin_marker.md",
-                extract_directory_prefix="tests/snippets"
-            )
-    
-        assert "Unclosed block" in str(exc_info.value)
-        assert "extract_orphaned_begin_marker.md" in str(exc_info.value)
-        assert "Expected end marker" in str(exc_info.value)
-<!-- end insert -->
-```
-
-Run the extraction process to create the file test.txt
+Run the extraction process to extract code examples from your source code.
 
 ```bash
-lineblock extract --source=README.md --prefix=.
+lineblock extract --source=test_factorial.py --prefix=.
 ```
 
-Run the insertion process to insert the code examples into your documentation.
+Run the insertion process to insert code examples into your documentation.
 
 ```bash
-lineblock insert --source=. --prefix=.
+lineblock insert --source=factorial.md --prefix=.
 ```
 
 
