@@ -35,8 +35,8 @@ def test_factorial():
 
 Add markers to your documentation to indicate where code example should be inserted.
 
-```
-<!-- block insert factorial.md -->
+```markdown
+    <!-- block insert examples/factorial_example.md -->
 ```
 
 Extract the tested code example from source.
