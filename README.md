@@ -54,12 +54,12 @@ lineblock insert --source=examples/factorial.md
 Documentaton with the code example inserted
 
 ```markdown
-```python
-    def factorial(n):
-        if n == 0 or n == 1:
-            return 1
-        return n * factorial(n - 1)
-```
+    ```python
+        def factorial(n):
+            if n == 0 or n == 1:
+                return 1
+            return n * factorial(n - 1)
+    ```
 ```
 
 Use the `lineblock` function to automate document generation.
