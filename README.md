@@ -51,8 +51,16 @@ Insert the example into your documentation.
 lineblock insert --source=examples/factorial.md
 ```
 
-The default block start and end markers are for source code in python and documentation in markdown.
-Adapt block markers to other languages and documentation formats by specifying regular expressions.
+Documentaton with the code example inserted
+
+```markdown
+```python
+    def factorial(n):
+        if n == 0 or n == 1:
+            return 1
+        return n * factorial(n - 1)
+```
+```
 
 Use the `lineblock` function to automate document generation.
 
