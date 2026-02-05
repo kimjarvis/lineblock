@@ -13,14 +13,14 @@ def lineblock(action: str,
                prefix: str = None,
                output: str = None,
                clear: bool = False,
-               extract_begin_prefix: str = r"#\s*block extract\s+",
-               extract_begin_suffix: str = r"",
-               extract_end_prefix: str = r"#\s*end extract\s+",
-               extract_end_suffix: str = r"",
-               insert_begin_prefix: str = r"<!--\s*block insert\s+",
-               insert_begin_suffix: str = r"\s*-->",
-               insert_end_prefix: str = r"<!--\s*end insert",
-               insert_end_suffix: str = r"\s*-->"):
+               extract_begin_prefix: str = None,
+               extract_begin_suffix: str = None,
+               extract_end_prefix: str = None,
+               extract_end_suffix: str = None,
+               insert_begin_prefix: str = None,
+               insert_begin_suffix: str = None,
+               insert_end_prefix: str = None,
+               insert_end_suffix: str = None):
     """
     Combined function for inserting or extracting code blocks.
     """
@@ -171,14 +171,14 @@ def main():
             prefix=args.prefix,
             output=getattr(args, 'output', None),
             clear=getattr(args, 'clear', False),
-            extract_begin_prefix=getattr(args, 'extract_begin_prefix', r"#\s*block extract\s+"),
-            extract_begin_suffix=getattr(args, 'extract_begin_suffix', r""),
-            extract_end_prefix=getattr(args, 'extract_end_prefix', r"#\s*end extract\s+"),
-            extract_end_suffix=getattr(args, 'extract_end_suffix', r""),
-            insert_begin_prefix=getattr(args, 'insert_begin_prefix', r"<!--\s*block insert\s+"),
-            insert_begin_suffix=getattr(args, 'insert_begin_suffix', r"\s*-->"),
-            insert_end_prefix=getattr(args, 'insert_end_prefix', r"<!--\s*end insert"),
-            insert_end_suffix=getattr(args, 'insert_end_suffix', r"\s*-->")
+            extract_begin_prefix=getattr(args, 'extract_begin_prefix', None),
+            extract_begin_suffix=getattr(args, 'extract_begin_suffix', None),
+            extract_end_prefix=getattr(args, 'extract_end_prefix', None),
+            extract_end_suffix=getattr(args, 'extract_end_suffix', None),
+            insert_begin_prefix=getattr(args, 'insert_begin_prefix', None),
+            insert_begin_suffix=getattr(args, 'insert_begin_suffix', None),
+            insert_end_prefix=getattr(args, 'insert_end_prefix', None),
+            insert_end_suffix=getattr(args, 'insert_end_suffix', None)
         )
     except (UnclosedBlockError, OrphanedExtractEndMarkerError,
             FileNotFoundError, NotADirectoryError, ValueError) as e:

@@ -7,26 +7,26 @@ class Defaults:
             "type": "Markdown",
             "Extract": {
                 "Begin": {
-                    "Prefix": "<!--\s*block extract\s",
-                    "Suffix": "",
-                    "Marker": "<!-- block extract <myblock.md> <n> <comment> -->",
+                    "Prefix": r"<!--\s*block extract\s",
+                    "Suffix": r"",
+                    "Marker": r"<!-- block extract <myblock.md> <n> <comment> -->",
                 },
                 "End": {
-                    "Prefix": "<!--\s*end extract\s", # todo: is there a comment here
-                    "Suffix": "",
-                    "Marker": "<!-- block extract end -->",
+                    "Prefix": r"<!--\s*end extract\s", # todo: is there a comment here
+                    "Suffix": r"",
+                    "Marker": r"<!-- block extract end -->",
                 }
             },
             "Insert": {
                 "Begin": {
-                    "Prefix": "<!--\s*block insert\s+",
-                    "Suffix": "\s*-->",
+                    "Prefix": r"<!--\s*block insert\s+",
+                    "Suffix": r"\s*-->",
                     "Marker": "<!-- block insert <myblock.md> -->", # todo: is there a comment here
                 },
                 "End": {
-                    "Prefix": "<!--\s*end insert",
-                    "Suffix": "\s*-->",
-                    "Marker": "<!-- block insert end -->",
+                    "Prefix": r"<!--\s*end insert",
+                    "Suffix": r"\s*-->",
+                    "Marker": r"<!-- block insert end -->",
                 }
             }
         },
@@ -34,26 +34,26 @@ class Defaults:
             "type": "Python",
             "Extract": {
                 "Begin": {
-                    "Prefix": "#\s*block extract\s+",
-                    "Suffix": "",
-                    "Marker": "# block extract <myblock.py> <n>-->",
+                    "Prefix": r"#\s*block extract\s+",
+                    "Suffix": r"",
+                    "Marker": r"# block extract <myblock.py> <n>-->",
                 },
                 "End": {
-                    "Prefix": "#\s*end extract\s+",
-                    "Suffix": "",
-                    "Marker": "# block extract end",
+                    "Prefix": r"#\s*end extract\s+",
+                    "Suffix": r"",
+                    "Marker": r"# block extract end",
                 }
             },
             "Insert": {
                 "Begin": {
-                    "Prefix": "#\s*block insert\s",
-                    "Suffix": "",
-                    "Marker": "# block insert <myblock.md> -->",
+                    "Prefix": r"#\s*block insert\s",
+                    "Suffix": r"",
+                    "Marker": r"# block insert <myblock.md> -->",
                 },
                 "End": {
-                    "Prefix": "#\s*end insert\s",
-                    "Suffix": "",
-                    "Marker": "# block insert end",
+                    "Prefix": r"#\s*end insert\s",
+                    "Suffix": r"",
+                    "Marker": r"# block insert end",
                 }
             }
         }
@@ -66,7 +66,7 @@ class Defaults:
 
 def main():
     # Verify the condition
-    result = Defaults["md"]["Insert"]["Begin"]["Prefix"] == r"#\s*block extract\s+"
+    result = Defaults["py"]["Extract"]["Begin"]["Prefix"] == r"#\s*block extract\s+"
     print(result)  # Should print True
 
 
