@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 
 from lineblock.common import Common
+from lineblock.defaults import Defaults
 from lineblock.exceptions import OrphanedInsertEndMarkerError
 
 

@@ -2,6 +2,7 @@ import re
 from pathlib import Path
 
 from lineblock.common import Common
+from lineblock.defaults import Defaults
 from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
 
 
@@ -171,7 +172,7 @@ class BlockExtract(Common):
         if path.is_file():
             self.process_file()
         else:
-            for file in path.rglob("*.py"):
+            for file in path.rglob("*.*"):
                 self.source_path = file
                 self.process_file()
 
