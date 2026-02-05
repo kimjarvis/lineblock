@@ -33,38 +33,15 @@ class BlockInsert(Common):
 
         self.markers: dict = None
 
-    # def is_start_marker(self, line):
-    #     s = line.strip()
-    #     if re.fullmatch(r"#\s*block insert\s+\S+.*", s):
-    #         return True, "python"
-    #     if re.fullmatch(r"<!--\s*block insert\s+\S+.*-->", s):
-    #         return True, "markdown"
-    #     return False, None
-
     def is_end_marker(self, line):
         s = line.strip()
-        if re.fullmatch(rf"{self.markers["Insert"]["End"]["Prefix"]}.*?{self.markers["Insert"]["End"]["Suffix"]}", s):
+        if re.fullmatch(rf"{self.markers["Insert"]["End"]["Prefix"]}.*?{self.markers["Insert"]["End"]["Suffix"]}.*", s):
             return True
-
-        # if re.fullmatch(r"#\s*end insert\s*", s):
-        #     return True
-        # if re.fullmatch(r"<!--\s*end insert\s*-->", s):
-        #     return True
         return False
 
     def extract_block_info(self, marker_line):
-        # match = re.match(r"(\s*)#\s*block insert\s+(\S+)(?:\s+(-?\d+))?", marker_line)
-        # if match:
-        #     leading_ws = match.group(1)
-        #     file_name = match.group(2)
-        #     extra_indent = int(match.group(3)) if match.group(3) else 0
-        #     original_indent = len(leading_ws)
-        #     total_indent = original_indent + extra_indent
-        #     file_path = Path(self.insert_directory_prefix) / file_name
-        #     return file_path, total_indent, original_indent, "python"
-
         match = re.match(
-            rf"(\s*){self.markers["Insert"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?{self.markers["Insert"]["Begin"]["Suffix"]}", marker_line
+            rf"(\s*){self.markers["Insert"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?{self.markers["Insert"]["Begin"]["Suffix"]}.*", marker_line
         )
         if match:
             leading_ws = match.group(1)

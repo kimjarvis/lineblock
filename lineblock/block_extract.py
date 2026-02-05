@@ -25,66 +25,29 @@ class BlockExtract(Common):
 
         self.markers: dict = None
 
-    @staticmethod
-    def is_start_marker(line):
+    def is_end_marker(self, line):
         s = line.strip()
-        if re.fullmatch(r"#\s*block extract\s+\S+.*", s):
-            return True
-        if re.fullmatch(r"<!--\s*block extract\s+\S+.*-->", s):
-            return True
-        return False
-
-    @staticmethod
-    def is_end_marker(line):
-        s = line.strip()
-
-        # Match Python-style comment with optional suffix
-        match = re.fullmatch(r"#\s*end extract\s*(.*)", s)
-        if match:
-            suffix = match.group(1).strip()
-            return True, suffix
-
-        # Match HTML comment with optional suffix before closing -->
-        match = re.fullmatch(r"<!--\s*end extract\s*(.*?)\s*-->", s)
-        if match:
-            suffix = match.group(1).strip()
-            return True, suffix
-
+        if re.fullmatch(rf"{self.markers["Extract"]["End"]["Prefix"]}{self.markers["Extract"]["End"]["Suffix"]}.*", s):
+            return True, ""
         return False, ""
 
     def extract_block_info(self, marker_line):
-        # Pattern: leading_ws + "# block extract" + filename + [optional indent] + [optional suffix]
+        # Pattern: leading_ws + prefixmarker + filename + [optional indent] + suffixmarker + [anything]
         match = re.match(
-            r"(\s*)#\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(.*))?", marker_line
+            rf"(\s*){self.markers["Extract"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?\s*{self.markers["Extract"]["Begin"]["Suffix"]}.*",
+            marker_line
         )
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
             extra_indent = int(match.group(3)) if match.group(3) else 0
-            suffix = match.group(4) if match.group(4) else ""
             original_indent = len(leading_ws)
             total_indent = (
-                original_indent + extra_indent
+                    original_indent + extra_indent
             )  # maintains current "extra indent" behavior
             file_path = Path(self.extract_directory_prefix) / file_name
-            return file_path, total_indent, suffix
-
-        # HTML comment variant
-        match = re.match(
-            r"(\s*)<!--\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(.*))?\s*-->",
-            marker_line,
-        )
-        if match:
-            leading_ws = match.group(1)
-            file_name = match.group(2)
-            extra_indent = int(match.group(3)) if match.group(3) else 0
-            suffix = match.group(4) if match.group(4) else ""
-            original_indent = len(leading_ws)
-            total_indent = original_indent + extra_indent
-            file_path = Path(self.extract_directory_prefix) / file_name
-            return file_path, total_indent, suffix
-
-        return None
+            return True, file_path, total_indent, ""
+        return False,
 
     def process_file(self):
         try:
@@ -115,7 +78,8 @@ class BlockExtract(Common):
                     i += 1
                     continue
 
-            if self.is_start_marker(line):
+            # if self.is_start_marker(line):
+            if self.extract_block_info(line)[0]:
                 # Check if we're already in a block (nested blocks are not allowed)
                 if in_block:
                     # We're trying to start a new block while already in one
@@ -127,7 +91,7 @@ class BlockExtract(Common):
 
                 info = self.extract_block_info(line)
                 if info:
-                    file_path, total_indent, suffix = info
+                    _, file_path, total_indent, suffix = info
                     pre = suffix
                     start_line = i + 1  # 1-based line number for error reporting
                     i += 1

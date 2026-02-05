@@ -8,20 +8,20 @@ class Defaults:
             "type": "Markdown",
             "Extract": {
                 "Begin": {
-                    "Prefix": r"<!--\s*block extract\s",
-                    "Suffix": r"",
+                    "Prefix": r"<!--\s*block extract", # used
+                    "Suffix": r"\s*-->", # used
                     "Marker": r"<!-- block extract <myblock.md> <n> <comment> -->",
                 },
                 "End": {
-                    "Prefix": r"<!--\s*end extract\s",
-                    "Suffix": r"",
-                    "Marker": r"<!-- end extract -->",
+                    "Prefix": r"<!--\s*end extract",
+                    "Suffix": r"\s*-->",  # Used, the s is required for some reason.
+                    "Marker": r"<!-- end extract -->", # This is a comment
                 },
             },
             "Insert": {
                 "Begin": {
-                    "Prefix": r"<!--\s*block insert",  # <-- todo: remove trailling s on others
-                    "Suffix": r"\s*-->",  # Used, the preceeding s could be removed
+                    "Prefix": r"<!--\s*block insert",  # <-- todo: remove trailing s on others
+                    "Suffix": r"\s*-->",  # Used, the preseeding s could be removed
                     "Marker": "<!-- block insert <myblock.md> -->",  # Just a comment
                 },
                 "End": {
@@ -35,24 +35,24 @@ class Defaults:
             "type": "Python",
             "Extract": {
                 "Begin": {
-                    "Prefix": r"#\s*block extract\s+",
+                    "Prefix": r"#\s*block extract",
                     "Suffix": r"",
                     "Marker": r"# block extract <myblock.py> <n>-->",
                 },
                 "End": {
-                    "Prefix": r"#\s*end extract\s+",
+                    "Prefix": r"#\s*end extract",
                     "Suffix": r"",
                     "Marker": r"# end extract",
                 },
             },
             "Insert": {
                 "Begin": {
-                    "Prefix": r"#\s*block insert\s",
+                    "Prefix": r"#\s*block insert",
                     "Suffix": r"",
                     "Marker": r"# block insert <myblock.md> -->",
                 },
                 "End": {
-                    "Prefix": r"#\s*end insert\s",
+                    "Prefix": r"#\s*end insert",
                     "Suffix": r"",
                     "Marker": r"# end insert",
                 },
