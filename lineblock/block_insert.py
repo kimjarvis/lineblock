@@ -36,17 +36,22 @@ class BlockInsert(Common):
         return False
 
     def extract_block_info(self, marker_line):
+        # Pattern: leading_ws + prefixmarker + filename + [optional indent] + [optional skip] + [optional hop] + suffixmarker + [anything]
         match = re.match(
-            rf"(\s*){self.markers["Insert"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?{self.markers["Insert"]["Begin"]["Suffix"]}.*", marker_line
+            rf"(\s*){self.markers['Insert']['Begin']['Prefix']}\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*{self.markers['Insert']['Begin']['Suffix']}.*",
+            marker_line
         )
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
             extra_indent = int(match.group(3)) if match.group(3) else 0
+            skip = int(match.group(4)) if match.group(4) else 0
+            hop = int(match.group(5)) if match.group(5) else 0
             original_indent = len(leading_ws)
             total_indent = original_indent + extra_indent
             file_path = Path(self.insert_directory_prefix) / file_name
-            return file_path, total_indent, original_indent
+
+            return file_path, total_indent, original_indent, hop, skip
 
         return None
 
@@ -96,7 +101,7 @@ class BlockInsert(Common):
             info = self.extract_block_info(line)
 
             if info:
-                file_path, total_indent, orig_indent = info
+                file_path, total_indent, orig_indent, hop, skip = info
                 file_exists = file_path.exists()
 
                 if not file_exists:
