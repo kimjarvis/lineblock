@@ -7,17 +7,19 @@ from lineblock.exceptions import OrphanedInsertEndMarkerError
 
 
 class BlockInsert(Common):
-    def __init__(self,
-                 source_file: str,
-                 insert_directory_prefix: str,
-                 output_directory: str = None,
-                 clear_mode: bool = False,
-                 insert_begin_prefix: str = None,
-                 insert_begin_suffix: str = None,
-                 insert_end_prefix: str = None,
-                 insert_end_suffix: str = None,
-                 before: str = None,
-                 after: str = None):
+    def __init__(
+        self,
+        source_file: str,
+        insert_directory_prefix: str,
+        output_directory: str = None,
+        clear_mode: bool = False,
+        insert_begin_prefix: str = None,
+        insert_begin_suffix: str = None,
+        insert_end_prefix: str = None,
+        insert_end_suffix: str = None,
+        before: str = None,
+        after: str = None,
+    ):
         self.source_file = source_file
         self.insert_directory_prefix = insert_directory_prefix
         self.output_directory = output_directory
@@ -29,34 +31,41 @@ class BlockInsert(Common):
         self.before = before
         self.after = after
 
-    def is_start_marker(self, line):
-        s = line.strip()
-        if re.fullmatch(r"#\s*block insert\s+\S+.*", s):
-            return True, "python"
-        if re.fullmatch(r"<!--\s*block insert\s+\S+.*-->", s):
-            return True, "markdown"
-        return False, None
+        self.markers: dict = None
+
+    # def is_start_marker(self, line):
+    #     s = line.strip()
+    #     if re.fullmatch(r"#\s*block insert\s+\S+.*", s):
+    #         return True, "python"
+    #     if re.fullmatch(r"<!--\s*block insert\s+\S+.*-->", s):
+    #         return True, "markdown"
+    #     return False, None
 
     def is_end_marker(self, line):
         s = line.strip()
-        if re.fullmatch(r"#\s*end insert\s*", s):
+        if re.fullmatch(rf"{self.markers["Insert"]["End"]["Prefix"]}.*?{self.markers["Insert"]["End"]["Suffix"]}", s):
             return True
-        if re.fullmatch(r"<!--\s*end insert\s*-->", s):
-            return True
+
+        # if re.fullmatch(r"#\s*end insert\s*", s):
+        #     return True
+        # if re.fullmatch(r"<!--\s*end insert\s*-->", s):
+        #     return True
         return False
 
     def extract_block_info(self, marker_line):
-        match = re.match(r"(\s*)#\s*block insert\s+(\S+)(?:\s+(-?\d+))?", marker_line)
-        if match:
-            leading_ws = match.group(1)
-            file_name = match.group(2)
-            extra_indent = int(match.group(3)) if match.group(3) else 0
-            original_indent = len(leading_ws)
-            total_indent = original_indent + extra_indent
-            file_path = Path(self.insert_directory_prefix) / file_name
-            return file_path, total_indent, original_indent, "python"
+        # match = re.match(r"(\s*)#\s*block insert\s+(\S+)(?:\s+(-?\d+))?", marker_line)
+        # if match:
+        #     leading_ws = match.group(1)
+        #     file_name = match.group(2)
+        #     extra_indent = int(match.group(3)) if match.group(3) else 0
+        #     original_indent = len(leading_ws)
+        #     total_indent = original_indent + extra_indent
+        #     file_path = Path(self.insert_directory_prefix) / file_name
+        #     return file_path, total_indent, original_indent, "python"
 
-        match = re.match(r"(\s*)<!--\s*block insert\s+(\S+)(?:\s+(-?\d+))?\s*-->", marker_line)
+        match = re.match(
+            rf"(\s*){self.markers["Insert"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?{self.markers["Insert"]["Begin"]["Suffix"]}", marker_line
+        )
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
@@ -108,7 +117,7 @@ class BlockInsert(Common):
                 raise OrphanedInsertEndMarkerError(
                     source_file=str(source_file_path),
                     line_number=i + 1,
-                    line_content=line.strip()
+                    line_content=line.strip(),
                 )
 
             info = self.extract_block_info(line)
@@ -145,8 +154,8 @@ class BlockInsert(Common):
 
                         # If the original marker line doesn't end with \n,
                         # we need to add a newline before the block content for proper formatting
-                        if not line.endswith('\n'):
-                            replacement.append('\n')
+                        if not line.endswith("\n"):
+                            replacement.append("\n")
 
                         # Process the block content with proper indentation
                         indented_block = self.indent_lines(block_content, total_indent)
@@ -154,20 +163,24 @@ class BlockInsert(Common):
                         # Ensure each line of inserted content ends with newline
                         formatted_indented_block = []
                         for indented_line in indented_block:
-                            stripped_line = indented_line.rstrip('\n')
-                            formatted_indented_block.append(stripped_line + '\n')
+                            stripped_line = indented_line.rstrip("\n")
+                            formatted_indented_block.append(stripped_line + "\n")
 
                         replacement.extend(formatted_indented_block)
                     except FileNotFoundError:
                         print(f"Warning: Block file '{file_path}' not found.")
 
-                    if block_type == "python":
-                        block_end_tag = f"{' ' * orig_indent}# end insert"
-                    else:
-                        block_end_tag = f"{' ' * orig_indent}<!-- end insert -->"
+                    block_end_tag = f"{' ' * orig_indent}{self.markers["Insert"]["End"]["Marker"]}"
+                    # print(block_end_tag) 
+
+                    # if block_type == "python":
+                    #     block_end_tag = f"{' ' * orig_indent}# end insert"
+                    # else:
+                    #     block_end_tag = f"{' ' * orig_indent}<!-- end insert -->"
+
 
                     # Only add newline to the block end tag if the original marker line had a newline
-                    if line.endswith('\n'):
+                    if line.endswith("\n"):
                         replacement.append(block_end_tag + "\n")
                     else:
                         replacement.append(block_end_tag)
@@ -193,7 +206,9 @@ class BlockInsert(Common):
         if output != original_lines:
             # Ensure output directory exists - raise exception if it doesn't
             if not output_path.parent.exists():
-                raise FileNotFoundError(f"Output directory '{output_path.parent}' does not exist.")
+                raise FileNotFoundError(
+                    f"Output directory '{output_path.parent}' does not exist."
+                )
             with open(output_path, "w") as f:
                 f.writelines(output)
             action = "Created" if self.output_directory else "Updated"
@@ -208,15 +223,21 @@ class BlockInsert(Common):
 
         # Ensure source_file is a file
         if not source_file_path.is_file():
-            raise ValueError(f"Source path '{source_file_path}' must be a file, not a directory.")
+            raise ValueError(
+                f"Source path '{source_file_path}' must be a file, not a directory."
+            )
 
         # Ensure source_file has either .py or .md extension
-        if source_file_path.suffix.lower() not in ['.py', '.md']:
-            raise ValueError(f"Source path '{source_file_path}' must be a .py or .md file, not '{source_file_path.suffix}'.")
+        if source_file_path.suffix.lower() not in [".py", ".md"]:
+            raise ValueError(
+                f"Source path '{source_file_path}' must be a .py or .md file, not '{source_file_path.suffix}'."
+            )
 
         # Ensure insert_directory_prefix is a directory
         if not insert_dir_path.is_dir():
-            raise NotADirectoryError(f"Insert path '{insert_dir_path}' is not a directory.")
+            raise NotADirectoryError(
+                f"Insert path '{insert_dir_path}' is not a directory."
+            )
 
         # Resolve output path if provided
         output_root = None
@@ -224,15 +245,21 @@ class BlockInsert(Common):
             output_root = Path(self.output_directory).expanduser().resolve()
             # Ensure output_directory exists
             if not output_root.exists():
-                raise FileNotFoundError(f"Output directory '{output_root}' does not exist.")
+                raise FileNotFoundError(
+                    f"Output directory '{output_root}' does not exist."
+                )
             # Ensure output_directory is a directory
             if not output_root.is_dir():
-                raise NotADirectoryError(f"Output path '{self.output_directory}' must be a directory, not a file.")
+                raise NotADirectoryError(
+                    f"Output path '{self.output_directory}' must be a directory, not a file."
+                )
 
             # Check that source file is not within the output directory
             try:
                 source_file_path.relative_to(output_root)
-                raise ValueError(f"Source file '{source_file_path}' must not be inside output directory '{output_root}'.")
+                raise ValueError(
+                    f"Source file '{source_file_path}' must not be inside output directory '{output_root}'."
+                )
             except ValueError:
                 # Expected case: source_file is NOT inside output_root
                 pass
@@ -243,20 +270,25 @@ class BlockInsert(Common):
         if self.output_directory:
             self.output_directory = str(output_root)
 
+        self.markers = Defaults.get_markers(Path(self.source_file).suffix)
+
+        print(self.markers["Insert"]["Begin"]["Prefix"])
+
         self.process_file()
 
 
-def block_insert(source_file: str,
-                 insert_directory_prefix: str,
-                 output_directory: str = None,
-                 clear_mode: bool = False,
-                 insert_begin_prefix: str = None,
-                 insert_begin_suffix: str = None,
-                 insert_end_prefix: str = None,
-                 insert_end_suffix: str = None,
-                 before: str = None,
-                 after: str = None,
-                 ):
+def block_insert(
+    source_file: str,
+    insert_directory_prefix: str,
+    output_directory: str = None,
+    clear_mode: bool = False,
+    insert_begin_prefix: str = None,
+    insert_begin_suffix: str = None,
+    insert_end_prefix: str = None,
+    insert_end_suffix: str = None,
+    before: str = None,
+    after: str = None,
+):
     """Insert code blocks into Python/Markdown files based on markers."""
     block_inserter = BlockInsert(
         source_file=source_file,
