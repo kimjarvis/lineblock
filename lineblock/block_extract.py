@@ -28,8 +28,8 @@ class BlockExtract(Common):
     def is_end_marker(self, line):
         s = line.strip()
         if re.fullmatch(rf"{self.markers["Extract"]["End"]["Prefix"]}{self.markers["Extract"]["End"]["Suffix"]}.*", s):
-            return True, ""
-        return False, ""
+            return True
+        return False
 
     def extract_block_info(self, marker_line):
         # Pattern: leading_ws + prefixmarker + filename + [optional indent] + suffixmarker + [anything]
@@ -46,7 +46,7 @@ class BlockExtract(Common):
                     original_indent + extra_indent
             )  # maintains current "extra indent" behavior
             file_path = Path(self.extract_directory_prefix) / file_name
-            return True, file_path, total_indent, ""
+            return True, file_path, total_indent
         return False,
 
     def process_file(self):
@@ -59,12 +59,10 @@ class BlockExtract(Common):
 
         i = 0
         in_block = False  # Track if we're currently processing a block
-        pre = ""
-        post = ""
         while i < len(original_lines):
             line = original_lines[i]
 
-            if self.is_end_marker(line)[0]:
+            if self.is_end_marker(line):
                 # Check if we have an orphaned end marker
                 if not in_block:
                     raise OrphanedExtractEndMarkerError(
@@ -72,8 +70,6 @@ class BlockExtract(Common):
                     )
                 else:
                     # Found the end of the current block
-                    _, suffix = self.is_end_marker(line)
-                    post = suffix
                     in_block = False
                     i += 1
                     continue
@@ -91,8 +87,7 @@ class BlockExtract(Common):
 
                 info = self.extract_block_info(line)
                 if info:
-                    _, file_path, total_indent, suffix = info
-                    pre = suffix
+                    _, file_path, total_indent = info
                     start_line = i + 1  # 1-based line number for error reporting
                     i += 1
                     block_lines = []
@@ -101,10 +96,8 @@ class BlockExtract(Common):
                     # Collect lines until we find the corresponding end marker
                     while i < len(original_lines):
                         current_line = original_lines[i]
-                        if self.is_end_marker(current_line)[0]:
+                        if self.is_end_marker(current_line):
                             # Found the end marker for this block
-                            _, suffix = self.is_end_marker(current_line)
-                            post = suffix
                             in_block = False
                             break
                         block_lines.append(current_line)
@@ -124,11 +117,7 @@ class BlockExtract(Common):
                     # Write extracted block with indentation
                     indented_lines = self.indent_lines(block_lines, total_indent)
                     with open(file_path, "w") as out_f:
-                        if pre != "":
-                            out_f.write(pre + "\n")
                         out_f.writelines(indented_lines)
-                        if post != "":
-                            out_f.write(post + "\n")
             i += 1
 
     def process(self):
