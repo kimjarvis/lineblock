@@ -50,7 +50,7 @@ class BlockInsert(Common):
             original_indent = len(leading_ws)
             total_indent = original_indent + extra_indent
             file_path = Path(self.insert_directory_prefix) / file_name
-            return file_path, total_indent, original_indent, "markdown"
+            return file_path, total_indent, original_indent
 
         return None
 
@@ -100,7 +100,7 @@ class BlockInsert(Common):
             info = self.extract_block_info(line)
 
             if info:
-                file_path, total_indent, orig_indent, block_type = info
+                file_path, total_indent, orig_indent = info
                 file_exists = file_path.exists()
 
                 if not file_exists:
