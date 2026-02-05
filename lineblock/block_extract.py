@@ -6,8 +6,19 @@ from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockErr
 
 
 class BlockExtract(Common):
-    def __init__(self):
-        pass
+    def __init__(self,
+                 source_path: str,
+                 extract_directory_prefix: str,
+                 extract_begin_prefix: str = None,
+                 extract_begin_suffix: str = None,
+                 extract_end_prefix: str = None,
+                 extract_end_suffix: str = None):
+        self.source_path = source_path
+        self.extract_directory_prefix = extract_directory_prefix
+        self.extract_begin_prefix = extract_begin_prefix
+        self.extract_begin_suffix = extract_begin_suffix
+        self.extract_end_prefix = extract_end_prefix
+        self.extract_end_suffix = extract_end_suffix
 
     @staticmethod
     def is_start_marker(line):
@@ -36,8 +47,7 @@ class BlockExtract(Common):
 
         return False, ""
 
-    @staticmethod
-    def extract_block_info(marker_line, extract_directory_prefix):
+    def extract_block_info(self, marker_line):
         # Pattern: leading_ws + "# block extract" + filename + [optional indent] + [optional suffix]
         match = re.match(
             r"(\s*)#\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(.*))?",
@@ -50,7 +60,7 @@ class BlockExtract(Common):
             suffix = match.group(4) if match.group(4) else ""
             original_indent = len(leading_ws)
             total_indent = original_indent + extra_indent  # maintains current "extra indent" behavior
-            file_path = Path(extract_directory_prefix) / file_name
+            file_path = Path(self.extract_directory_prefix) / file_name
             return file_path, total_indent, suffix
 
         # HTML comment variant
@@ -65,17 +75,17 @@ class BlockExtract(Common):
             suffix = match.group(4) if match.group(4) else ""
             original_indent = len(leading_ws)
             total_indent = original_indent + extra_indent
-            file_path = Path(extract_directory_prefix) / file_name
+            file_path = Path(self.extract_directory_prefix) / file_name
             return file_path, total_indent, suffix
 
         return None
 
-    def process_file(self, source_file, extract_directory_prefix):
+    def process_file(self):
         try:
-            with open(source_file, "r") as f:
+            with open(self.source_path, "r") as f:
                 original_lines = f.readlines()
         except FileNotFoundError:
-            print(f"Error: Source file '{source_file}' not found.")
+            print(f"Error: Source file '{self.source_path}' not found.")
             return
 
         i = 0
@@ -88,7 +98,7 @@ class BlockExtract(Common):
             if self.is_end_marker(line)[0]:
                 # Check if we have an orphaned end marker
                 if not in_block:
-                    raise OrphanedExtractEndMarkerError(source_file, i + 1, line.strip())
+                    raise OrphanedExtractEndMarkerError(self.source_path, i + 1, line.strip())
                 else:
                     # Found the end of the current block
                     _, suffix = self.is_end_marker(line)
@@ -101,10 +111,10 @@ class BlockExtract(Common):
                 # Check if we're already in a block (nested blocks are not allowed)
                 if in_block:
                     # We're trying to start a new block while already in one
-                    raise OrphanedExtractEndMarkerError(source_file, i + 1,
+                    raise OrphanedExtractEndMarkerError(self.source_path, i + 1,
                                                         "Found block extract marker without closing previous block.")
 
-                info = self.extract_block_info(line, extract_directory_prefix)
+                info = self.extract_block_info(line)
                 if info:
                     file_path, total_indent, suffix = info
                     pre = suffix
@@ -126,7 +136,7 @@ class BlockExtract(Common):
                         i += 1
                     else:
                         # Reached end of file without finding end marker
-                        raise UnclosedBlockError(source_file, start_line, line.strip())
+                        raise UnclosedBlockError(self.source_path, start_line, line.strip())
 
                     # Check if parent directories exist (don't create them)
                     if not file_path.parent.exists():
@@ -142,9 +152,9 @@ class BlockExtract(Common):
                             out_f.write(post + "\n")
             i += 1
 
-    def process_path(self, path, extract_directory_prefix):
-        path = Path(path).expanduser().resolve()
-        extract_directory_prefix = Path(extract_directory_prefix).expanduser().resolve()
+    def process(self):
+        path = Path(self.source_path).expanduser().resolve()
+        extract_directory_prefix = Path(self.extract_directory_prefix).expanduser().resolve()
 
         # Raise FileNotFoundError if the source path doesn't exist
         if not path.exists():
@@ -159,10 +169,11 @@ class BlockExtract(Common):
             raise NotADirectoryError(f"Error: Extract path '{extract_directory_prefix}' is not a directory.")
 
         if path.is_file():
-            self.process_file(path, extract_directory_prefix)
+            self.process_file()
         else:
             for file in path.rglob("*.py"):
-                self.process_file(file, extract_directory_prefix)
+                self.source_path = file
+                self.process_file()
 
 
 def block_extract(source_path: str,
@@ -170,11 +181,17 @@ def block_extract(source_path: str,
                   extract_begin_prefix: str = None,
                   extract_begin_suffix: str = None,
                   extract_end_prefix: str = None,
-                  extract_end_suffix: str = None,
-                  ):
+                  extract_end_suffix: str = None):
     try:
-        extractor = BlockExtract()
-        extractor.process_path(source_path, extract_directory_prefix)
+        extractor = BlockExtract(
+            source_path=source_path,
+            extract_directory_prefix=extract_directory_prefix,
+            extract_begin_prefix=extract_begin_prefix,
+            extract_begin_suffix=extract_begin_suffix,
+            extract_end_prefix=extract_end_prefix,
+            extract_end_suffix=extract_end_suffix
+        )
+        extractor.process()
     except (UnclosedBlockError, OrphanedExtractEndMarkerError) as e:
         print(f"Error: {e}")
         raise  # Re-raise to exit with non-zero status
