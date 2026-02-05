@@ -12,7 +12,7 @@ class Defaults:
                     "Marker": r"<!-- block extract <myblock.md> <n> <comment> -->",
                 },
                 "End": {
-                    "Prefix": r"<!--\s*end extract\s", # todo: is there a comment here
+                    "Prefix": r"<!--\s*end extract\s",
                     "Suffix": r"",
                     "Marker": r"<!-- block extract end -->",
                 }
@@ -21,7 +21,7 @@ class Defaults:
                 "Begin": {
                     "Prefix": r"<!--\s*block insert\s+",
                     "Suffix": r"\s*-->",
-                    "Marker": "<!-- block insert <myblock.md> -->", # todo: is there a comment here
+                    "Marker": "<!-- block insert <myblock.md> -->",
                 },
                 "End": {
                     "Prefix": r"<!--\s*end insert",

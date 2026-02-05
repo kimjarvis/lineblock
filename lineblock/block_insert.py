@@ -234,6 +234,8 @@ def block_insert(source_file: str,
                  insert_begin_suffix: str = None,
                  insert_end_prefix: str = None,
                  insert_end_suffix: str = None,
+                 before: str = None,
+                 after: str = None,
                  ):
     """Insert code blocks into Python/Markdown files based on markers.
     """

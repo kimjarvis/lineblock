@@ -20,7 +20,10 @@ def lineblock(action: str,
                insert_begin_prefix: str = None,
                insert_begin_suffix: str = None,
                insert_end_prefix: str = None,
-               insert_end_suffix: str = None):
+               insert_end_suffix: str = None,
+               before: str = None,
+               after: str = None,
+               ):
     """
     Combined function for inserting or extracting code blocks.
     """
@@ -44,7 +47,9 @@ def lineblock(action: str,
                 insert_begin_prefix=insert_begin_prefix,
                 insert_begin_suffix=insert_begin_suffix,
                 insert_end_prefix=insert_end_prefix,
-                insert_end_suffix=insert_end_suffix
+                insert_end_suffix=insert_end_suffix,
+                before=before,
+                after=after,
             )
 
         else:  # action == "extract"
@@ -136,6 +141,16 @@ def main():
         help="Directory for generated files (preserves structure). If omitted, modifies sources in-place."
     )
     insert_parser.add_argument(
+        "--before",
+        default=None,  # Set default prefix to "."
+        help="Line to insert before the block"
+    )
+    insert_parser.add_argument(
+        "--after",
+        default=None,  # Set default prefix to "."
+        help="Line to insert after the block"
+    )
+    insert_parser.add_argument(
         "--clear",
         action="store_true",
         help="Clear blocks without insertion (insert action only)."
@@ -178,7 +193,9 @@ def main():
             insert_begin_prefix=getattr(args, 'insert_begin_prefix', None),
             insert_begin_suffix=getattr(args, 'insert_begin_suffix', None),
             insert_end_prefix=getattr(args, 'insert_end_prefix', None),
-            insert_end_suffix=getattr(args, 'insert_end_suffix', None)
+            insert_end_suffix=getattr(args, 'insert_end_suffix', None),
+            before = getattr(args, 'before', None),
+            after = getattr(args, 'after', None),
         )
     except (UnclosedBlockError, OrphanedExtractEndMarkerError,
             FileNotFoundError, NotADirectoryError, ValueError) as e:
