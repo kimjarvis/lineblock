@@ -17,8 +17,6 @@ class BlockInsert(Common):
         insert_begin_suffix: str = None,
         insert_end_prefix: str = None,
         insert_end_suffix: str = None,
-        before: str = None,
-        after: str = None,
     ):
         self.source_file = source_file
         self.insert_directory_prefix = insert_directory_prefix
@@ -28,8 +26,6 @@ class BlockInsert(Common):
         self.insert_begin_suffix = insert_begin_suffix
         self.insert_end_prefix = insert_end_prefix
         self.insert_end_suffix = insert_end_suffix
-        self.before = before
-        self.after = after
 
         self.markers: dict = None
 
@@ -148,13 +144,6 @@ class BlockInsert(Common):
                         print(f"Warning: Block file '{file_path}' not found.")
 
                     block_end_tag = f"{' ' * orig_indent}{self.markers["Insert"]["End"]["Marker"]}"
-                    # print(block_end_tag) 
-
-                    # if block_type == "python":
-                    #     block_end_tag = f"{' ' * orig_indent}# end insert"
-                    # else:
-                    #     block_end_tag = f"{' ' * orig_indent}<!-- end insert -->"
-
 
                     # Only add newline to the block end tag if the original marker line had a newline
                     if line.endswith("\n"):
@@ -249,8 +238,6 @@ class BlockInsert(Common):
 
         self.markers = Defaults.get_markers(Path(self.source_file).suffix)
 
-        print(self.markers["Insert"]["Begin"]["Prefix"])
-
         self.process_file()
 
 
@@ -263,8 +250,6 @@ def block_insert(
     insert_begin_suffix: str = None,
     insert_end_prefix: str = None,
     insert_end_suffix: str = None,
-    before: str = None,
-    after: str = None,
 ):
     """Insert code blocks into Python/Markdown files based on markers."""
     block_inserter = BlockInsert(
@@ -276,8 +261,6 @@ def block_insert(
         insert_begin_suffix=insert_begin_suffix,
         insert_end_prefix=insert_end_prefix,
         insert_end_suffix=insert_end_suffix,
-        before=before,
-        after=after,
     )
     try:
         block_inserter.process()

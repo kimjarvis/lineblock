@@ -86,7 +86,7 @@ class Defaults:
         return cls._data[key]
 
 
-def main():
+def main(): # todo: remove this
     # Verify the condition
     result = Defaults[".py"]["Extract"]["Begin"]["Prefix"] == r"#\s*block extract\s+"
     print(result)  # Should print True
