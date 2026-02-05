@@ -15,19 +15,19 @@ class Defaults:
                 "End": {
                     "Prefix": r"<!--\s*end extract\s",
                     "Suffix": r"",
-                    "Marker": r"<!-- block extract end -->",
+                    "Marker": r"<!-- end extract -->",
                 },
             },
             "Insert": {
                 "Begin": {
-                    "Prefix": r"<!--\s*block insert\s+",
-                    "Suffix": r"\s*-->",
-                    "Marker": "<!-- block insert <myblock.md> -->",
+                    "Prefix": r"<!--\s*block insert",  # <-- todo: remove trailling s on others
+                    "Suffix": r"\s*-->",  # Used, the preceeding s could be removed
+                    "Marker": "<!-- block insert <myblock.md> -->",  # Just a comment
                 },
                 "End": {
-                    "Prefix": r"<!--\s*end insert",
-                    "Suffix": r"\s*-->",
-                    "Marker": r"<!-- block insert end -->",
+                    "Prefix": r"<!--\s*end insert",  # This allows comments
+                    "Suffix": r"\s*-->",  # Used, the s is required for some reason.
+                    "Marker": r"<!-- end insert -->",  # <-- todo: this is actually added, whereas the begin marker is comment!
                 },
             },
         },
@@ -42,7 +42,7 @@ class Defaults:
                 "End": {
                     "Prefix": r"#\s*end extract\s+",
                     "Suffix": r"",
-                    "Marker": r"# block extract end",
+                    "Marker": r"# end extract",
                 },
             },
             "Insert": {
@@ -54,7 +54,7 @@ class Defaults:
                 "End": {
                     "Prefix": r"#\s*end insert\s",
                     "Suffix": r"",
-                    "Marker": r"# block insert end",
+                    "Marker": r"# end insert",
                 },
             },
         },
