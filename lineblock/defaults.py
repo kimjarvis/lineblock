@@ -2,6 +2,7 @@ class Defaults:
     """
     Default values for command line parameters.
     """
+
     _data = {
         ".md": {
             "type": "Markdown",
@@ -15,7 +16,7 @@ class Defaults:
                     "Prefix": r"<!--\s*end extract\s",
                     "Suffix": r"",
                     "Marker": r"<!-- block extract end -->",
-                }
+                },
             },
             "Insert": {
                 "Begin": {
@@ -27,8 +28,8 @@ class Defaults:
                     "Prefix": r"<!--\s*end insert",
                     "Suffix": r"\s*-->",
                     "Marker": r"<!-- block insert end -->",
-                }
-            }
+                },
+            },
         },
         ".py": {
             "type": "Python",
@@ -42,7 +43,7 @@ class Defaults:
                     "Prefix": r"#\s*end extract\s+",
                     "Suffix": r"",
                     "Marker": r"# block extract end",
-                }
+                },
             },
             "Insert": {
                 "Begin": {
@@ -54,10 +55,14 @@ class Defaults:
                     "Prefix": r"#\s*end insert\s",
                     "Suffix": r"",
                     "Marker": r"# block insert end",
-                }
-            }
-        }
+                },
+            },
+        },
     }
+
+    @classmethod
+    def check_markers(cls, file_type):
+        return True if file_type in cls._data else False
 
     @classmethod
     def get_markers(cls, file_type):
