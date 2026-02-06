@@ -45,13 +45,13 @@ class BlockInsert(Common):
             leading_ws = match.group(1)
             file_name = match.group(2)
             extra_indent = int(match.group(3)) if match.group(3) else 0
-            hop = int(match.group(4)) if match.group(4) else 0
-            skip = int(match.group(5)) if match.group(5) else 0
+            head = int(match.group(4)) if match.group(4) else 0
+            tail = int(match.group(5)) if match.group(5) else 0
             original_indent = len(leading_ws)
             total_indent = original_indent + extra_indent
             file_path = Path(self.insert_directory_prefix) / file_name
 
-            return file_path, total_indent, original_indent, hop, skip
+            return file_path, total_indent, original_indent, head, tail
 
         return None
 
@@ -101,7 +101,7 @@ class BlockInsert(Common):
             info = self.extract_block_info(line)
 
             if info:
-                file_path, total_indent, orig_indent, hop, skip = info
+                file_path, total_indent, orig_indent, head, tail = info
                 file_exists = file_path.exists()
 
                 if not file_exists:
@@ -120,12 +120,12 @@ class BlockInsert(Common):
                 # Calculate actual hop and skip values based on available lines
                 # If no end marker exists, consider all lines after the start marker
                 available_lines = (end_i - (i + 1)) if end_i is not None else len(original_lines) - (i + 1)
-                actual_hop = min(hop, available_lines) if available_lines >= 0 else 0
+                actual_hop = min(head, available_lines) if available_lines >= 0 else 0
                 after_hop_idx = i + 1 + actual_hop if actual_hop > 0 else i + 1
 
                 # Calculate available lines after hop for skip
                 available_lines_after_hop = (end_i - after_hop_idx) if end_i is not None else len(original_lines) - after_hop_idx
-                actual_skip = min(skip, available_lines_after_hop) if available_lines_after_hop >= 0 else 0
+                actual_skip = min(tail, available_lines_after_hop) if available_lines_after_hop >= 0 else 0
 
                 # Calculate next_i based on whether there's an end marker or not
                 # But in clear mode when there's no end marker, we shouldn't skip lines

@@ -27,26 +27,28 @@ class BlockExtract(Common):
 
     def is_end_marker(self, line):
         s = line.strip()
-        if re.fullmatch(rf"{self.markers["Extract"]["End"]["Prefix"]}{self.markers["Extract"]["End"]["Suffix"]}.*", s):
+        if re.fullmatch(rf"{self.markers["Extract"]["End"]["Prefix"]}.*?{self.markers["Extract"]["End"]["Suffix"]}.*", s):
             return True
         return False
 
     def extract_block_info(self, marker_line):
         # Pattern: leading_ws + prefixmarker + filename + [optional indent] + suffixmarker + [anything]
         match = re.match(
-            rf"(\s*){self.markers["Extract"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?\s*{self.markers["Extract"]["Begin"]["Suffix"]}.*",
+            rf"(\s*){self.markers["Extract"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*{self.markers["Extract"]["Begin"]["Suffix"]}.*",
             marker_line
         )
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
             extra_indent = int(match.group(3)) if match.group(3) else 0
+            head = int(match.group(4)) if match.group(4) else 0
+            tail = int(match.group(5)) if match.group(5) else 0
             original_indent = len(leading_ws)
             total_indent = (
                     original_indent + extra_indent
             )  # maintains current "extra indent" behavior
             file_path = Path(self.extract_directory_prefix) / file_name
-            return True, file_path, total_indent
+            return True, file_path, total_indent, head, tail
         return False,
 
     def process_file(self):
@@ -87,7 +89,7 @@ class BlockExtract(Common):
 
                 info = self.extract_block_info(line)
                 if info:
-                    _, file_path, total_indent = info
+                    _, file_path, total_indent, head, tail = info
                     start_line = i + 1  # 1-based line number for error reporting
                     i += 1
                     block_lines = []
@@ -116,8 +118,16 @@ class BlockExtract(Common):
 
                     # Write extracted block with indentation
                     indented_lines = self.indent_lines(block_lines, total_indent)
+
+                    # Ensure there are enough lines after removing head and tail
+                    if len(indented_lines) <= (head + tail):
+                        raise ValueError("Not enough lines to remove the specified head and tail.")
+
+                    # Remove the top `head` lines and bottom `tail` lines
+                    trimmed_lines = indented_lines[head:-tail or None]
+
                     with open(file_path, "w") as out_f:
-                        out_f.writelines(indented_lines)
+                        out_f.writelines(trimmed_lines)
             i += 1
 
     def process(self):
