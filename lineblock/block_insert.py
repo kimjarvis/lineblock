@@ -36,7 +36,7 @@ class BlockInsert(Common):
         return False
 
     def extract_block_info(self, marker_line):
-        # Pattern: leading_ws + prefixmarker + filename + [optional indent] + [optional skip] + [optional hop] + suffixmarker + [anything]
+        # Pattern: leading_ws + prefixmarker + filename + [optional indent] + [optional head] + [optional tail] + suffixmarker + [anything]
         match = re.match(
             rf"(\s*){self.markers['Insert']['Begin']['Prefix']}\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*{self.markers['Insert']['Begin']['Suffix']}.*",
             marker_line
@@ -117,15 +117,15 @@ class BlockInsert(Common):
                         end_i = j
                         break
 
-                # Calculate actual hop and skip values based on available lines
+                # Calculate actual head and tail values based on available lines
                 # If no end marker exists, consider all lines after the start marker
                 available_lines = (end_i - (i + 1)) if end_i is not None else len(original_lines) - (i + 1)
-                actual_hop = min(head, available_lines) if available_lines >= 0 else 0
-                after_hop_idx = i + 1 + actual_hop if actual_hop > 0 else i + 1
+                actual_head = min(head, available_lines) if available_lines >= 0 else 0
+                after_head_idx = i + 1 + actual_head if actual_head > 0 else i + 1
 
-                # Calculate available lines after hop for skip
-                available_lines_after_hop = (end_i - after_hop_idx) if end_i is not None else len(original_lines) - after_hop_idx
-                actual_skip = min(tail, available_lines_after_hop) if available_lines_after_hop >= 0 else 0
+                # Calculate available lines after head for tail
+                available_lines_after_head = (end_i - after_head_idx) if end_i is not None else len(original_lines) - after_head_idx
+                actual_tail = min(tail, available_lines_after_head) if available_lines_after_head >= 0 else 0
 
                 # Calculate next_i based on whether there's an end marker or not
                 # But in clear mode when there's no end marker, we shouldn't skip lines
@@ -135,8 +135,8 @@ class BlockInsert(Common):
                     # In clear mode with no end marker, don't skip any lines
                     next_i = i + 1
                 else:
-                    # When there's no end marker in normal mode, skip the hop and skip lines
-                    next_i = i + 1 + actual_hop + actual_skip
+                    # When there's no end marker in normal mode, skip the head and tail lines
+                    next_i = i + 1 + actual_head + actual_tail
 
                 if self.clear_mode:
                     # In clear mode, we restore the original file structure
@@ -152,15 +152,15 @@ class BlockInsert(Common):
                         # Output the marker line
                         output.append(line)
 
-                        # Output the hop lines (they remain in the same relative position after marker)
-                        for j in range(i + 1, i + 1 + actual_hop):
+                        # Output the head lines (they remain in the same relative position after marker)
+                        for j in range(i + 1, i + 1 + actual_head):
                             if j < len(original_lines):
                                 output.append(original_lines[j])
 
-                        # Output the skip lines (they were moved to before the end marker)
-                        # The skip lines are the 'actual_skip' lines immediately before the end marker
-                        skip_start_idx = end_i - actual_skip
-                        for j in range(skip_start_idx, end_i):
+                        # Output the tail lines (they were moved to before the end marker)
+                        # The tail lines are the 'actual_tail' lines immediately before the end marker
+                        tail_start_idx = end_i - actual_tail
+                        for j in range(tail_start_idx, end_i):
                             if j >= 0 and j < len(original_lines):
                                 output.append(original_lines[j])
 
@@ -173,7 +173,7 @@ class BlockInsert(Common):
                     block_already_inserted = False
                     if end_i is not None:
                         # Get the content between the marker and end marker that should contain the block
-                        # This content should be: hop lines + block content + skip lines
+                        # This content should be: head lines + block content + tail lines
                         start_content_idx = i + 1
                         end_content_idx = end_i
 
@@ -193,13 +193,13 @@ class BlockInsert(Common):
                                 expected_formatted_block.append(stripped_line + "\n")
 
                             # Check if the between_content matches the expected pattern:
-                            # [hop lines] + [expected block content] + [skip lines]
-                            expected_hop_lines = original_lines[i + 1:i + 1 + actual_hop]
-                            expected_skip_lines = original_lines[end_content_idx - actual_skip:end_content_idx]
+                            # [head lines] + [expected block content] + [tail lines]
+                            expected_head_lines = original_lines[i + 1:i + 1 + actual_head]
+                            expected_tail_lines = original_lines[end_content_idx - actual_tail:end_content_idx]
 
                             # Extract the middle part (should be the block content)
-                            middle_start = len(expected_hop_lines)
-                            middle_end = len(between_content) - len(expected_skip_lines)
+                            middle_start = len(expected_head_lines)
+                            middle_end = len(between_content) - len(expected_tail_lines)
                             if middle_end < middle_start:
                                 middle_end = middle_start  # Prevent negative slice
                             actual_block_content = between_content[middle_start:middle_end]
@@ -229,8 +229,8 @@ class BlockInsert(Common):
                             if not line.endswith("\n"):
                                 replacement.append("\n")
 
-                            # Apply hop: insert original lines before the block
-                            for j in range(i + 1, i + 1 + actual_hop):
+                            # Apply head: insert original lines before the block
+                            for j in range(i + 1, i + 1 + actual_head):
                                 replacement.append(original_lines[j])
 
                             # Process the block content with proper indentation
@@ -244,8 +244,8 @@ class BlockInsert(Common):
 
                             replacement.extend(formatted_indented_block)
 
-                            # Apply skip: insert original lines after the block but before end marker
-                            for j in range(after_hop_idx, after_hop_idx + actual_skip):
+                            # Apply tail: insert original lines after the block but before end marker
+                            for j in range(after_head_idx, after_head_idx + actual_tail):
                                 replacement.append(original_lines[j])
 
                             # When there's no end marker, we need to handle the remaining lines differently
@@ -265,7 +265,7 @@ class BlockInsert(Common):
                         output.extend(replacement)
                         changed = True
 
-                    # Update i to skip over the processed content
+                    # Update i to tail over the processed content
                     i = next_i
 
                 # Set inside_block to True when we find a start marker

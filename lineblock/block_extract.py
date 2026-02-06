@@ -32,7 +32,7 @@ class BlockExtract(Common):
         return False
 
     def extract_block_info(self, marker_line):
-        # Pattern: leading_ws + prefixmarker + filename + [optional indent] + suffixmarker + [anything]
+        # Pattern: leading_ws + prefixmarker + filename + [optional indent] + [optional head] + [optional tail] + suffixmarker + [anything]
         match = re.match(
             rf"(\s*){self.markers["Extract"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*{self.markers["Extract"]["Begin"]["Suffix"]}.*",
             marker_line
