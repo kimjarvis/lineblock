@@ -13,14 +13,6 @@ def lineblock(action: str,
                prefix: str = None,
                output: str = None,
                clear: bool = False,
-               extract_begin_prefix: str = None,
-               extract_begin_suffix: str = None,
-               extract_end_prefix: str = None,
-               extract_end_suffix: str = None,
-               insert_begin_prefix: str = None,
-               insert_begin_suffix: str = None,
-               insert_end_prefix: str = None,
-               insert_end_suffix: str = None,
                ):
     """
     Combined function for inserting or extracting code blocks.
@@ -42,10 +34,6 @@ def lineblock(action: str,
                 insert_directory_prefix=prefix,
                 output_directory=output,
                 clear_mode=clear,
-                insert_begin_prefix=insert_begin_prefix,
-                insert_begin_suffix=insert_begin_suffix,
-                insert_end_prefix=insert_end_prefix,
-                insert_end_suffix=insert_end_suffix,
             )
 
         else:  # action == "extract"
@@ -59,10 +47,6 @@ def lineblock(action: str,
             block_extract(
                 source_path=source,
                 extract_directory_prefix=prefix,
-                extract_begin_prefix=extract_begin_prefix,
-                extract_begin_suffix=extract_begin_suffix,
-                extract_end_prefix=extract_end_prefix,
-                extract_end_suffix=extract_end_suffix
             )
 
     except (FileNotFoundError, NotADirectoryError, ValueError) as e:
@@ -99,26 +83,6 @@ def main():
         default=".",  # Set default prefix to "."
         help="Base path for block files (default: '.')."
     )
-    extract_parser.add_argument(
-        "--extract_begin_prefix",
-        default=r"#\s*block extract\s+",
-        help="Regex prefix for extract begin marker (default: '#\\s*block extract\\s+')"
-    )
-    extract_parser.add_argument(
-        "--extract_begin_suffix",
-        default=r"",
-        help="Regex suffix for extract begin marker (default: '')"
-    )
-    extract_parser.add_argument(
-        "--extract_end_prefix",
-        default=r"#\s*end extract\s+",
-        help="Regex prefix for extract end marker (default: '#\\s*end extract\\s+')"
-    )
-    extract_parser.add_argument(
-        "--extract_end_suffix",
-        default=r"",
-        help="Regex suffix for extract end marker (default: '')"
-    )
 
     # Insert subparser
     insert_parser = subparsers.add_parser('insert', help='Insert code blocks into source files')
@@ -141,26 +105,6 @@ def main():
         action="store_true",
         help="Clear blocks without insertion (insert action only)."
     )
-    insert_parser.add_argument(
-        "--insert_begin_prefix",
-        default=r"<!--\s*block insert\s+",
-        help="Regex prefix for insert begin marker (default: '<!--\\s*block insert\\s+')"
-    )
-    insert_parser.add_argument(
-        "--insert_begin_suffix",
-        default=r"\s*-->",
-        help="Regex suffix for insert begin marker (default: '\\s*-->')"
-    )
-    insert_parser.add_argument(
-        "--insert_end_prefix",
-        default=r"<!--\s*end insert",
-        help="Regex prefix for insert end marker (default: '<!--\\s*end insert')"
-    )
-    insert_parser.add_argument(
-        "--insert_end_suffix",
-        default=r"\s*-->",
-        help="Regex suffix for insert end marker (default: '\\s*-->')"
-    )
 
     args = parser.parse_args()
 
@@ -172,14 +116,6 @@ def main():
             prefix=args.prefix,
             output=getattr(args, 'output', None),
             clear=getattr(args, 'clear', False),
-            extract_begin_prefix=getattr(args, 'extract_begin_prefix', None),
-            extract_begin_suffix=getattr(args, 'extract_begin_suffix', None),
-            extract_end_prefix=getattr(args, 'extract_end_prefix', None),
-            extract_end_suffix=getattr(args, 'extract_end_suffix', None),
-            insert_begin_prefix=getattr(args, 'insert_begin_prefix', None),
-            insert_begin_suffix=getattr(args, 'insert_begin_suffix', None),
-            insert_end_prefix=getattr(args, 'insert_end_prefix', None),
-            insert_end_suffix=getattr(args, 'insert_end_suffix', None),
         )
     except (UnclosedBlockError, OrphanedExtractEndMarkerError,
             FileNotFoundError, NotADirectoryError, ValueError) as e:

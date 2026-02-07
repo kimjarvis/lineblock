@@ -8,11 +8,13 @@ class Defaults:
             "type": "Markdown",
             "Extract": {
                 "Begin": {
+                    "Pattern": "<!--\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*-->.*",
                     "Prefix": r"<!--\s*block extract", # used
                     "Suffix": r"\s*-->", # used
                     "Marker": r"<!-- block extract <myblock.md> <n> <comment> -->",
                 },
                 "End": {
+                    "Pattern": "<!--\s*end extract.*?\s*-->.*",
                     "Prefix": r"<!--\s*end extract",
                     "Suffix": r"\s*-->",  # Used, the s is required for some reason.
                     "Marker": r"<!-- end extract -->", # This is a comment
@@ -20,11 +22,13 @@ class Defaults:
             },
             "Insert": {
                 "Begin": {
+                    "Pattern": "<!--\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*-->.*",
                     "Prefix": r"<!--\s*block insert",  # <-- todo: remove trailing s on others
                     "Suffix": r"\s*-->",  # Used, the preseeding s could be removed
                     "Marker": "<!-- block insert <myblock.md> -->",  # Just a comment
                 },
                 "End": {
+                    "Pattern": "<!--\s*end insert.*?\s*-->.*",
                     "Prefix": r"<!--\s*end insert",  # This allows comments
                     "Suffix": r"\s*-->",  # Used, the s is required for some reason.
                     "Marker": r"<!-- end insert -->",  # <-- todo: this is actually added, whereas the begin marker is comment!
@@ -35,11 +39,13 @@ class Defaults:
             "type": "Python",
             "Extract": {
                 "Begin": {
+                    "Pattern": "#\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*.*",
                     "Prefix": r"#\s*block extract",
                     "Suffix": r"",
                     "Marker": r"# block extract <myblock.py> <n>-->",
                 },
                 "End": {
+                    "Pattern": "#\s*end extract.*?\s*.*",
                     "Prefix": r"#\s*end extract",
                     "Suffix": r"",
                     "Marker": r"# end extract",
@@ -47,11 +53,13 @@ class Defaults:
             },
             "Insert": {
                 "Begin": {
+                    "Pattern": "#\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*.*",
                     "Prefix": r"#\s*block insert",
                     "Suffix": r"",
                     "Marker": r"# block insert <myblock.md> -->",
                 },
                 "End": {
+                    "Pattern": "#\s*end insert.*?\s*.*",
                     "Prefix": r"#\s*end insert",
                     "Suffix": r"",
                     "Marker": r"# end insert",

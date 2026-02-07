@@ -13,19 +13,11 @@ class BlockInsert(Common):
         insert_directory_prefix: str,
         output_directory: str = None,
         clear_mode: bool = False,
-        insert_begin_prefix: str = None,
-        insert_begin_suffix: str = None,
-        insert_end_prefix: str = None,
-        insert_end_suffix: str = None,
     ):
         self.source_file = source_file
         self.insert_directory_prefix = insert_directory_prefix
         self.output_directory = output_directory
         self.clear_mode = clear_mode
-        self.insert_begin_prefix = insert_begin_prefix
-        self.insert_begin_suffix = insert_begin_suffix
-        self.insert_end_prefix = insert_end_prefix
-        self.insert_end_suffix = insert_end_suffix
 
         self.markers: dict = None
 
@@ -361,10 +353,6 @@ def block_insert(
     insert_directory_prefix: str,
     output_directory: str = None,
     clear_mode: bool = False,
-    insert_begin_prefix: str = None,
-    insert_begin_suffix: str = None,
-    insert_end_prefix: str = None,
-    insert_end_suffix: str = None,
 ):
     """Insert code blocks into Python/Markdown files based on markers."""
     block_inserter = BlockInsert(
@@ -372,10 +360,6 @@ def block_insert(
         insert_directory_prefix=insert_directory_prefix,
         output_directory=output_directory,
         clear_mode=clear_mode,
-        insert_begin_prefix=insert_begin_prefix,
-        insert_begin_suffix=insert_begin_suffix,
-        insert_end_prefix=insert_end_prefix,
-        insert_end_suffix=insert_end_suffix,
     )
     try:
         block_inserter.process()
