@@ -2,7 +2,6 @@ import re
 from pathlib import Path
 
 from lineblock.common import Common
-from lineblock.defaults import Defaults
 from lineblock.exceptions import OrphanedInsertEndMarkerError
 from lineblock.markers import Markers
 
@@ -18,8 +17,6 @@ class BlockInsert(Common):
         self.insert_directory_prefix = insert_directory_prefix
         self.output_directory = output_directory
         self.clear_mode = clear_mode
-
-        self.markers: dict = None
 
     def is_end_marker(self, markers, line):
         s = line.strip()
@@ -345,8 +342,6 @@ class BlockInsert(Common):
         self.insert_directory_prefix = str(insert_dir_path)
         if self.output_directory:
             self.output_directory = str(output_root)
-
-        self.markers = Defaults.get_markers(Path(self.source_file).suffix)
 
         self.process_file1()
 

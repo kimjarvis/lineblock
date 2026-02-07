@@ -2,7 +2,6 @@ import re
 from pathlib import Path
 
 from lineblock.common import Common
-from lineblock.defaults import Defaults
 from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
 from lineblock.markers import Markers
 
@@ -14,8 +13,6 @@ class BlockExtract(Common):
     ):
         self.source_path = source_path
         self.extract_directory_prefix = extract_directory_prefix
-
-        self.markers: dict = None
 
     def is_end_marker(self, markers, line):
         s = line.strip()
@@ -146,14 +143,11 @@ class BlockExtract(Common):
             )
 
         if path.is_file():
-            self.markers = Defaults.get_markers(Path(self.source_path).suffix)
             self.process_file1()
         else:
             for file in path.rglob("*.*"):
                 self.source_path = file
-                if Defaults.check_markers(Path(self.source_path).suffix):
-                    self.markers = Defaults.get_markers(Path(self.source_path).suffix)
-                    self.process_file1()
+                self.process_file1()
 
 
 def block_extract(
