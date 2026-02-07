@@ -4,7 +4,7 @@ from pathlib import Path
 from lineblock.common import Common
 from lineblock.defaults import Defaults
 from lineblock.exceptions import OrphanedInsertEndMarkerError
-
+from lineblock.markers import Markers
 
 class BlockInsert(Common):
     def __init__(
@@ -21,18 +21,16 @@ class BlockInsert(Common):
 
         self.markers: dict = None
 
-    def is_end_marker(self, line):
+    def is_end_marker(self, markers, line):
         s = line.strip()
-        if re.fullmatch(rf"{self.markers["Insert"]["End"]["Prefix"]}.*?{self.markers["Insert"]["End"]["Suffix"]}.*", s):
+        if re.fullmatch(markers["Insert"]["End"], s):
             return True
         return False
 
-    def extract_block_info(self, marker_line):
+
+    def extract_block_info(self, markers, line):
         # Pattern: leading_ws + prefixmarker + filename + [optional indent] + [optional head] + [optional tail] + suffixmarker + [anything]
-        match = re.match(
-            rf"(\s*){self.markers['Insert']['Begin']['Prefix']}\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*{self.markers['Insert']['Begin']['Suffix']}.*",
-            marker_line
-        )
+        match = re.match(markers["Insert"]["Begin"], line)
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
@@ -47,7 +45,12 @@ class BlockInsert(Common):
 
         return None
 
-    def process_file(self, source_root=None):
+    def process_file1(self):
+        for markers in Markers.markers():
+            self.process_file(markers)
+
+
+    def process_file(self, markers, source_root=None):
         try:
             with open(self.source_file, "r") as f:
                 original_lines = f.readlines()
@@ -82,7 +85,7 @@ class BlockInsert(Common):
             line = original_lines[i]
 
             # Check if this is an end marker without a start marker
-            if self.is_end_marker(line) and not inside_block:
+            if self.is_end_marker(markers, line) and not inside_block:
                 # This is an orphaned end marker
                 raise OrphanedInsertEndMarkerError(
                     source_file=str(source_file_path),
@@ -90,7 +93,7 @@ class BlockInsert(Common):
                     line_content=line.strip(),
                 )
 
-            info = self.extract_block_info(line)
+            info = self.extract_block_info(markers, line)
 
             if info:
                 file_path, total_indent, orig_indent, head, tail = info
@@ -105,7 +108,7 @@ class BlockInsert(Common):
                 # Find end marker
                 end_i = None
                 for j in range(i + 1, len(original_lines)):
-                    if self.is_end_marker(original_lines[j]):
+                    if self.is_end_marker(markers, original_lines[j]):
                         end_i = j
                         break
 
@@ -246,7 +249,7 @@ class BlockInsert(Common):
                         except FileNotFoundError:
                             print(f"Warning: Block file '{file_path}' not found.")
 
-                        block_end_tag = f"{' ' * orig_indent}{self.markers["Insert"]["End"]["Marker"]}"
+                        block_end_tag = f"{' ' * orig_indent}{markers["Insert"]["Marker"]}"
 
                         # Add newline to the block end tag only if the original marker line had a newline
                         if line.endswith("\n"):
@@ -264,11 +267,11 @@ class BlockInsert(Common):
                 inside_block = True
                 i = next_i
             else:
-                if self.is_end_marker(line):
+                if self.is_end_marker(markers, line):
                     # We've reached the end of a block
                     inside_block = False
 
-                if self.clear_mode and self.is_end_marker(line):
+                if self.clear_mode and self.is_end_marker(markers, line):
                     # In clear mode, skip the end marker as we're removing it
                     changed = True
                 else:
@@ -345,7 +348,7 @@ class BlockInsert(Common):
 
         self.markers = Defaults.get_markers(Path(self.source_file).suffix)
 
-        self.process_file()
+        self.process_file1()
 
 
 def block_insert(

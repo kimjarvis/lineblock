@@ -11,7 +11,7 @@ class Markers:
                 "End": r"<!--\s*end extract.*?\s*-->.*",
             },
             "Insert": {
-                "Begin": r"<!--\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*-->.*",
+                "Begin": r"(\s*)<!--\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*-->.*",
                 "End": r"<!--\s*end insert.*?\s*-->.*",
                 "Marker": r"<!-- end insert -->",
             },
@@ -23,7 +23,7 @@ class Markers:
                 "End": r"#\s*end extract.*?\s*.*",
             },
             "Insert": {
-                "Begin": r"#\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*.*",
+                "Begin": r"(\s*)#\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*.*",
                 "End": r"#\s*end insert.*?\s*.*",
                 "Marker": r"# end insert",
             },
