@@ -1,0 +1,19 @@
+site_name: Lineblock
+site_description: Test code examples
+site_url: https://lineblock.org/
+
+repo_name: kimjarvis/lineblock
+repo_url: https://github.com/kimjarvis/lineblock
+
+theme:
+  name: material
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+
+nav:
+  - Use cases: index.md
+  - Tutorial: tutorial.md
+
+
