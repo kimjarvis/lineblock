@@ -1,5 +1,7 @@
 # Lineblocks
 
+Test code examples.
+
 Linblocks is a tool for maintaining code documentation. Lineblocks keeps code documentation in sync with source code. 
 
 It solves the issue of outdated documentation by:
