@@ -7,11 +7,11 @@ class Markers:
         {
             "type": "Markdown",
             "Extract": {
-                "Begin": r"(\s*)<!--\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*-->.*",
+                "Begin": r'(\s*)<!--\s*block extract\s+(?:"([^"]*)"|\'([^\']*)\'|(\S+))(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*-->.*',
                 "End": r"<!--\s*end extract.*?\s*-->.*",
             },
             "Insert": {
-                "Begin": r"(\s*)<!--\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*-->.*",
+                "Begin": r'(\s*)<!--\s*block insert\s+(?:"([^"]*)"|\'([^\']*)\'|(\S+))(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*-->.*',
                 "End": r"<!--\s*end insert.*?\s*-->.*",
                 "Marker": r"<!-- end insert -->",
             },
@@ -19,11 +19,11 @@ class Markers:
         {
             "type": "Python",
             "Extract": {
-                "Begin": r"(\s*)#\s*block extract\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*.*",
+                "Begin": r'(\s*)#\s*block extract\s+(?:"([^"]*)"|\'([^\']*)\'|(\S+))(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*.*',
                 "End": r"#\s*end extract.*?\s*.*",
             },
             "Insert": {
-                "Begin": r"(\s*)#\s*block insert\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*\s*.*",
+                "Begin": r'(\s*)#\s*block insert\s+(?:"([^"]*)"|\'([^\']*)\'|(\S+))(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*.*',
                 "End": r"#\s*end insert.*?\s*.*",
                 "Marker": r"# end insert",
             },

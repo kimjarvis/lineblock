@@ -21,30 +21,31 @@ class Source(Common):
             return True
         return False
 
+    # Pattern: leading_ws + prefixmarker + identity + [optional indent] + [optional head] + [optional tail] + suffixmarker + [anything]
     def extract_block_info(self, line):
-        # Pattern: leading_ws + prefixmarker + filename + [optional indent] + [optional head] + [optional tail] + suffixmarker + [anything]
         match = re.match(self.markers["Extract"]["Begin"], line)
         if match:
             leading_ws = match.group(1)
-            file_name = match.group(2)
-            extra_indent = int(match.group(3)) if match.group(3) else 0
-            head = int(match.group(4)) if match.group(4) else 0
-            tail = int(match.group(5)) if match.group(5) else 0
+
+            # Identity can be in group 2 (double quotes), 3 (single quotes), or 4 (unquoted word)
+            identity = match.group(2) or match.group(3) or match.group(4)
+
+            extra_indent = int(match.group(5)) if match.group(5) else 0
+            head = int(match.group(6)) if match.group(6) else 0
+            tail = int(match.group(7)) if match.group(7) else 0
+
             original_indent = len(leading_ws)
-            total_indent = (
-                    original_indent + extra_indent
-            )  # maintains current "extra indent" behavior
-            return True, file_name, total_indent, head, tail
-        return False,
+            total_indent = original_indent + extra_indent
+            return True, identity, total_indent, head, tail
+        return False, None, 0, 0, 0  # Return consistent tuple
 
 
     def process_file(self):
         try:
             with open(self.path, "r") as f:
                 original_lines = f.readlines()
-        except FileNotFoundError:
-            print(f"Error: Source file '{self.path}' not found.")
-            return
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Source file '{self.path}' not found.") from e
 
         i = 0
         in_block = False  # Track if we're currently processing a block
@@ -76,7 +77,7 @@ class Source(Common):
 
                 info = self.extract_block_info(line)
                 if info:
-                    _, file_path, total_indent, head, tail = info
+                    _, identity, total_indent, head, tail = info
                     start_line = i + 1  # 1-based line number for error reporting
                     i += 1
                     block_lines = []
@@ -107,12 +108,9 @@ class Source(Common):
                     # Remove the top `head` lines and bottom `tail` lines
                     trimmed_lines = indented_lines[head:-tail or None]
 
-                    for line in trimmed_lines:
-                        print(line.rstrip())
-
                     self.block_map.append({
                         "path": self.path,
-                        "file_path": file_path,
+                        "identity": identity,
                         "start_line": start_line,
                         "end_line": i,
                         "indent": total_indent,

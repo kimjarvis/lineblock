@@ -15,7 +15,7 @@ from typing import List, Optional
 
 
 from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
-from lineblock.process import process
+from lineblock.process import process, process_inserts
 
 class NotAFileError(Exception):
     """Raised when a file operation expects a file but gets something else."""
@@ -207,10 +207,26 @@ def traverse_directory(
             # Check pattern match
             if matches_patterns(path, patterns):
                 block_map.extend(process(root_path=root,file_path=path.resolve()))
-    return block_map
+
+        # Again for insert
+    for start_dir in target_dirs:
+        # Use rglob for recursive traversal
+        for path in start_dir.rglob('*'):
+            # Skip if excluded
+            if should_exclude(path, exclude_patterns, root):
+                continue
+
+            # Skip directories (we only print files)
+            if not path.is_file():
+                continue
+
+            # Check pattern match
+            if matches_patterns(path, patterns):
+                process_inserts(block_map=block_map, file_path=path.resolve())
+    return
 
 
-def handle_single_file(target_path: Path) -> List:
+def handle_single_file(target_path: Path) -> None:
     """
     Handle case when positional argument is a single file.
     Prints the absolute path of the file.
@@ -223,7 +239,9 @@ def handle_single_file(target_path: Path) -> List:
 
     block_map = []
     block_map.append(process(root_path=target_path.parent(),file_path=target_path.resolve())) # todo: what to do here?
-    return block_map
+    print(block_map)
+    process_inserts(block_map=block_map, file_path=target_path.resolve())
+    return
 
 
 def main() -> int:
@@ -258,7 +276,7 @@ def main() -> int:
 
     try:
         if is_file_target:
-            block_map=handle_single_file(target_path)
+            handle_single_file(target_path)
         else:
             # Treat as directory traversal
             if not target_path.exists():
@@ -272,14 +290,12 @@ def main() -> int:
             if args.exclude_file:
                 exclude_patterns.extend(load_exclude_patterns(args.exclude_file))
 
-            block_map=traverse_directory(
+            traverse_directory(
                 root=target_path,
                 patterns=args.patterns,
                 subdirs=args.dirs,
                 exclude_patterns=exclude_patterns
             )
-
-        print(block_map)
 
         return 0
 
