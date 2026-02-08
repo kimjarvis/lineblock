@@ -3,7 +3,7 @@ from lineblock.sink import Sink
 from pathlib import Path
 from lineblock.markers import Markers
 
-def process(root_path: Path = None, file_path: Path = None):
+def process(file_path: Path = None):
     block_map = []
     for markers in Markers.markers():
         s = Source(path=file_path, markers=markers)

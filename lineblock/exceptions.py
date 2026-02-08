@@ -34,3 +34,12 @@ class OrphanedInsertEndMarkerError(Exception):
                    f"in file '{source_file}'. "
                    f"No corresponding '# block insert' or '<!-- block insert -->' marker found.")
         super().__init__(message)
+
+class IncompatibleOptionsError(Exception):
+    """Raised when incompatible options are provided."""
+    pass
+
+
+class NotAFileError(Exception):
+    """Raised when a file is expected but not found."""
+    pass

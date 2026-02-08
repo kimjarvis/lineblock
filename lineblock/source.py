@@ -102,7 +102,7 @@ class Source(Common):
                     indented_lines = self.indent_lines(block_lines, total_indent)
 
                     # Ensure there are enough lines after removing head and tail
-                    if len(indented_lines) <= (head + tail):
+                    if len(indented_lines) < (head + tail):
                         raise ValueError("Not enough lines to remove the specified head and tail.")
 
                     # Remove the top `head` lines and bottom `tail` lines
