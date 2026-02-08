@@ -380,3 +380,216 @@ def test_individual_file():
         <!-- end insert -->        
         """
         assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+
+
+def test_python():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+
+# block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+# end extract
+
+    # block insert "basic" 0 0 0 
+
+        """
+        original_file.write_text(original_content)
+        result = lineblock(tmp_dir)
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+
+# block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+# end extract
+
+    # block insert "basic" 0 0 0 
+    line 1
+    line 2
+    line 3
+    # end insert
+
+        """
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+
+def test_c():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+
+// block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+// end extract
+
+    // block insert "basic" 0 0 0 
+
+        """
+        original_file.write_text(original_content)
+        result = lineblock(tmp_dir)
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+
+// block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+// end extract
+
+    // block insert "basic" 0 0 0 
+    line 1
+    line 2
+    line 3
+    // end insert
+
+        """
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+
+def test_assembly():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+
+; block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+; end extract
+
+    ; block insert "basic" 0 0 0 
+
+        """
+        original_file.write_text(original_content)
+        result = lineblock(tmp_dir)
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+
+; block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+; end extract
+
+    ; block insert "basic" 0 0 0 
+    line 1
+    line 2
+    line 3
+    ; end insert
+
+        """
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+
+def test_SQL():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+
+-- block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+-- end extract
+
+    -- block insert "basic" 0 0 0 
+
+        """
+        original_file.write_text(original_content)
+        result = lineblock(tmp_dir)
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+
+-- block extract "basic" 0 0 0
+line 1
+line 2
+line 3
+-- end extract
+
+    -- block insert "basic" 0 0 0 
+    line 1
+    line 2
+    line 3
+    -- end insert
+
+        """
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+
+
+def test_c_multi_line():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+
+/* block extract "basic" 0 0 0*/
+line 1
+line 2
+line 3
+/* end extract */
+
+    /* block insert "basic" 0 0 0 */
+
+        """
+        original_file.write_text(original_content)
+        result = lineblock(tmp_dir)
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+
+/* block extract "basic" 0 0 0*/
+line 1
+line 2
+line 3
+/* end extract */
+
+    /* block insert "basic" 0 0 0 */
+    line 1
+    line 2
+    line 3
+    /* end insert */
+
+        """
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+
+
+def test_ruby():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+
+=begin block extract "basic" 0 0 0=end
+line 1
+line 2
+line 3
+=begin end extract =end
+
+    =begin block insert "basic" 0 0 0 =end
+
+        """
+        original_file.write_text(original_content)
+        result = lineblock(tmp_dir)
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+
+=begin block extract "basic" 0 0 0=end
+line 1
+line 2
+line 3
+=begin end extract =end
+
+    =begin block insert "basic" 0 0 0 =end
+    line 1
+    line 2
+    line 3
+    =begin end insert =end
+
+        """
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
