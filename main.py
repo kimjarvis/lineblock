@@ -20,17 +20,17 @@ from lineblock.lineblock import lineblock
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
-        description="Visit files and print absolute paths. "
+        description="Recursively traverse a directory structures, identifying template blocks, and performing block substitutions."
                     "Accepts a file or directory as target.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  %(prog)s ~/a                          # List all files under directory ~/a
-  %(prog)s ~/a -p "*.py"                # Only Python files in ~/a
-  %(prog)s ~/a -p "*.txt" -p "*.md"     # Multiple patterns in ~/a
-  %(prog)s ~/a -x "*.pyc" -x "__pycache__"  # Exclude patterns in ~/a
-  %(prog)s ~/a -d src tests             # Only traverse subdirs src/ and tests/
-  %(prog)s specific.txt                 # Print absolute path of specific.txt
+  %(prog)s ~/a                          # Traverse all files under directory ~/a
+  %(prog)s ~/a -p "*.py"                # Only traverse Python files in ~/a
+  %(prog)s ~/a -p "*.txt" -p "*.md"     # Use multiple patterns under path ~/a
+  %(prog)s ~/a -x "*.pyc" -x "__pycache__"  # Exclude patterns under path ~/a
+  %(prog)s ~/a -d src tests             # Only traverse sub-directories src/ and tests/
+  %(prog)s specific.txt                 # Run on file specific.txt
         """
     )
 
