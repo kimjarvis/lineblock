@@ -9,8 +9,10 @@ import argparse
 import fnmatch
 import os
 import sys
+import traceback
 from pathlib import Path
 from typing import List, Optional
+
 
 from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
 from lineblock.process import process
@@ -184,6 +186,7 @@ def traverse_directory(
     """
     target_dirs = get_target_dirs(root, subdirs)
 
+    block_map = []
     for start_dir in target_dirs:
         if not start_dir.exists():
             raise FileNotFoundError(f"Directory does not exist: {start_dir}")
@@ -203,10 +206,11 @@ def traverse_directory(
 
             # Check pattern match
             if matches_patterns(path, patterns):
-                process(path.resolve())
+                block_map.extend(process(root_path=root,file_path=path.resolve()))
+    return block_map
 
 
-def handle_single_file(target_path: Path) -> None:
+def handle_single_file(target_path: Path) -> List:
     """
     Handle case when positional argument is a single file.
     Prints the absolute path of the file.
@@ -217,7 +221,9 @@ def handle_single_file(target_path: Path) -> None:
     if not target_path.is_file():
         raise NotAFileError(f"Not a file: {target_path}")
 
-    process(target_path.resolve())
+    block_map = []
+    block_map.append(process(root_path=target_path.parent(),file_path=target_path.resolve())) # todo: what to do here?
+    return block_map
 
 
 def main() -> int:
@@ -252,7 +258,7 @@ def main() -> int:
 
     try:
         if is_file_target:
-            handle_single_file(target_path)
+            block_map=handle_single_file(target_path)
         else:
             # Treat as directory traversal
             if not target_path.exists():
@@ -266,12 +272,14 @@ def main() -> int:
             if args.exclude_file:
                 exclude_patterns.extend(load_exclude_patterns(args.exclude_file))
 
-            traverse_directory(
+            block_map=traverse_directory(
                 root=target_path,
                 patterns=args.patterns,
                 subdirs=args.dirs,
                 exclude_patterns=exclude_patterns
             )
+
+        print(block_map)
 
         return 0
 

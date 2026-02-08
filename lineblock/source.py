@@ -9,10 +9,11 @@ class Source(Common):
     def __init__(
         self,
         path: Path = None,
-        markers: dict = None,
+        markers: dict = None
     ):
         self.path = path
         self.markers = markers
+        self.block_map = []
 
     def is_end_marker(self, line):
         s = line.strip()
@@ -108,6 +109,18 @@ class Source(Common):
 
                     for line in trimmed_lines:
                         print(line.rstrip())
+
+                    self.block_map.append({
+                        "path": self.path,
+                        "file_path": file_path,
+                        "start_line": start_line,
+                        "end_line": i,
+                        "indent": total_indent,
+                        "head": head,
+                        "tail": tail,
+                        "block": trimmed_lines
+                    })
+
             i += 1
 
 
