@@ -381,6 +381,229 @@ def test_individual_file():
         """
         assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
 
+def test_pattern():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+        """
+        original_file.write_text(original_content)
+
+        original_python_file = Path(tmp_dir) / "basic.py"
+        original_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+        original_python_file.write_text(original_python_content)
+
+
+        result = lineblock(tmp_dir,pattern="*.md")
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+            line 1
+        <!-- end insert -->        
+        """
+        new_python_content = original_python_file.read_text()
+        expected_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+        assert (new_python_content.replace('\r\n', '\n').strip() == expected_python_content.replace('\r\n', '\n').strip())
+
+def test_pattern_list():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+        """
+        original_file.write_text(original_content)
+
+        original_python_file = Path(tmp_dir) / "basic.py"
+        original_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+        original_python_file.write_text(original_python_content)
+
+
+        result = lineblock(tmp_dir,pattern=["*.md","*.py"])
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+            line 1
+        <!-- end insert -->        
+        """
+        new_python_content = original_python_file.read_text()
+        expected_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+            line 1
+        # end insert
+        """
+
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+        assert (new_python_content.replace('\r\n', '\n').strip() == expected_python_content.replace('\r\n', '\n').strip())
+
+
+def test_exclude_pattern():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+        """
+        original_file.write_text(original_content)
+
+        original_python_file = Path(tmp_dir) / "basic.py"
+        original_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+        original_python_file.write_text(original_python_content)
+
+
+        result = lineblock(tmp_dir,exclude="*.py")
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+            line 1
+        <!-- end insert -->        
+        """
+        new_python_content = original_python_file.read_text()
+        expected_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+        assert (new_python_content.replace('\r\n', '\n').strip() == expected_python_content.replace('\r\n', '\n').strip())
+
+
+def test_exclude_pattern_list():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        original_file = Path(tmp_dir) / "basic.md"
+        original_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+        """
+        original_file.write_text(original_content)
+
+        original_python_file = Path(tmp_dir) / "basic.py"
+        original_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+        original_python_file.write_text(original_python_content)
+
+
+        result = lineblock(tmp_dir,exclude=["*.py","*.md"])
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+        """
+        new_python_content = original_python_file.read_text()
+        expected_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+        assert (new_python_content.replace('\r\n', '\n').strip() == expected_python_content.replace('\r\n', '\n').strip())
+
+def test_subdirectory():
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        markdown_directory = Path(tmp_dir) / "markdown"
+        markdown_directory.mkdir(exist_ok=True)
+
+        original_file = markdown_directory / "basic.md"
+        original_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+        """
+        original_file.write_text(original_content)
+
+        python_directory = Path(tmp_dir) / "python"
+        python_directory.mkdir(exist_ok=True)
+
+        original_python_file = python_directory / "basic.md"
+        original_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+        original_python_file.write_text(original_python_content)
+
+        result = lineblock(tmp_dir,dirs=["markdown"])
+        assert (result == 0)
+        new_content = original_file.read_text()
+        expected_content = """
+        <!-- block extract "basic" 0 0 0-->
+            line 1
+        <!-- end extract -->
+        <!-- block insert "basic" -16 0 0 -->
+            line 1
+        <!-- end insert -->        
+        """
+        new_python_content = original_python_file.read_text()
+        expected_python_content = """
+        # block extract "basic" 0 0 0
+            line 1
+        # end extract
+        # block insert "basic" -16 0 0 
+        """
+
+        assert (new_content.replace('\r\n', '\n').strip() == expected_content.replace('\r\n', '\n').strip())
+        assert (new_python_content.replace('\r\n', '\n').strip() == expected_python_content.replace('\r\n', '\n').strip())
+
+
 
 def test_python():
     with tempfile.TemporaryDirectory() as tmp_dir:
