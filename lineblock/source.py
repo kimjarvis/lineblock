@@ -64,7 +64,6 @@ class Source(Common):
                     i += 1
                     continue
 
-            # if self.is_start_marker(line):
             if self.extract_block_info(line)[0]:
                 # Check if we're already in a block (nested blocks are not allowed)
                 if in_block:
