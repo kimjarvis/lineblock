@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import List, Optional, Union
 
 
-from lineblock.exceptions import OrphanedInsertEndMarkerError, OrphanedExtractEndMarkerError, UnclosedBlockError, NotAFileError, IncompatibleOptionsError
+from lineblock.exceptions import OrphanedInsertEndMarkerError, OrphanedExtractEndMarkerError, UnclosedBlockError, NotAFileError, IncompatibleOptionsError, NestedExtractBeginMarkerError
 from lineblock.lineblock import lineblock
 
 def parse_args() -> argparse.Namespace:
@@ -91,6 +91,7 @@ def main() -> int:
         )
 
     except (
+            NestedExtractBeginMarkerError,
             OrphanedInsertEndMarkerError,
             OrphanedExtractEndMarkerError,
             UnclosedBlockError,

@@ -330,7 +330,7 @@ def test_nesting():
 
         """
         original_file.write_text(original_content)
-        with pytest.raises(OrphanedExtractEndMarkerError):
+        with pytest.raises(OrphanedExtractEndMarkerError): # todo: this should produce a NestedExtractBeginMarkerError
             lineblock(tmp_dir)
 
 

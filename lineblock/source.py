@@ -2,8 +2,8 @@ import re
 from pathlib import Path
 
 from lineblock.common import Common
-from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
-from lineblock.markers import Markers
+from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError, NestedExtractBeginMarkerError
+
 
 class Source(Common):
     def __init__(
@@ -69,7 +69,7 @@ class Source(Common):
                 # Check if we're already in a block (nested blocks are not allowed)
                 if in_block:
                     # We're trying to start a new block while already in one
-                    raise OrphanedExtractEndMarkerError(
+                    raise NestedExtractBeginMarkerError(
                         self.path,
                         i + 1,
                         "Found block extract marker without closing previous block.",
@@ -81,7 +81,7 @@ class Source(Common):
                     start_line = i + 1  # 1-based line number for error reporting
                     i += 1
                     block_lines = []
-                    in_block = True  # Now we're inside a block
+                    in_block = True  # Now we're inside a block # note: IDE reports as not used, but it is.
 
                     # Collect lines until we find the corresponding end marker
                     while i < len(original_lines):
