@@ -2,41 +2,27 @@ import re
 from pathlib import Path
 
 from lineblock.common import Common
-from lineblock.defaults import Defaults
 from lineblock.exceptions import OrphanedExtractEndMarkerError, UnclosedBlockError
-
+from lineblock.markers import Markers
 
 class BlockExtract(Common):
     def __init__(
         self,
         source_path: str,
         extract_directory_prefix: str,
-        extract_begin_prefix: str = None,
-        extract_begin_suffix: str = None,
-        extract_end_prefix: str = None,
-        extract_end_suffix: str = None,
     ):
         self.source_path = source_path
         self.extract_directory_prefix = extract_directory_prefix
-        self.extract_begin_prefix = extract_begin_prefix
-        self.extract_begin_suffix = extract_begin_suffix
-        self.extract_end_prefix = extract_end_prefix
-        self.extract_end_suffix = extract_end_suffix
 
-        self.markers: dict = None
-
-    def is_end_marker(self, line):
+    def is_end_marker(self, markers, line):
         s = line.strip()
-        if re.fullmatch(rf"{self.markers["Extract"]["End"]["Prefix"]}.*?{self.markers["Extract"]["End"]["Suffix"]}.*", s):
+        if re.fullmatch(markers["Extract"]["End"], s):
             return True
         return False
 
-    def extract_block_info(self, marker_line):
+    def extract_block_info(self, markers, line):
         # Pattern: leading_ws + prefixmarker + filename + [optional indent] + [optional head] + [optional tail] + suffixmarker + [anything]
-        match = re.match(
-            rf"(\s*){self.markers["Extract"]["Begin"]["Prefix"]}\s+(\S+)(?:\s+(-?\d+))?(?:\s+(\d+))?(?:\s+(\d+))?\s*{self.markers["Extract"]["Begin"]["Suffix"]}.*",
-            marker_line
-        )
+        match = re.match(markers["Extract"]["Begin"], line)
         if match:
             leading_ws = match.group(1)
             file_name = match.group(2)
@@ -51,7 +37,11 @@ class BlockExtract(Common):
             return True, file_path, total_indent, head, tail
         return False,
 
-    def process_file(self):
+    def process_file1(self):
+        for markers in Markers.markers():
+            self.process_file(markers)
+
+    def process_file(self, markers):
         try:
             with open(self.source_path, "r") as f:
                 original_lines = f.readlines()
@@ -64,7 +54,7 @@ class BlockExtract(Common):
         while i < len(original_lines):
             line = original_lines[i]
 
-            if self.is_end_marker(line):
+            if self.is_end_marker(markers, line):
                 # Check if we have an orphaned end marker
                 if not in_block:
                     raise OrphanedExtractEndMarkerError(
@@ -77,7 +67,7 @@ class BlockExtract(Common):
                     continue
 
             # if self.is_start_marker(line):
-            if self.extract_block_info(line)[0]:
+            if self.extract_block_info(markers, line)[0]:
                 # Check if we're already in a block (nested blocks are not allowed)
                 if in_block:
                     # We're trying to start a new block while already in one
@@ -87,7 +77,7 @@ class BlockExtract(Common):
                         "Found block extract marker without closing previous block.",
                     )
 
-                info = self.extract_block_info(line)
+                info = self.extract_block_info(markers, line)
                 if info:
                     _, file_path, total_indent, head, tail = info
                     start_line = i + 1  # 1-based line number for error reporting
@@ -98,7 +88,7 @@ class BlockExtract(Common):
                     # Collect lines until we find the corresponding end marker
                     while i < len(original_lines):
                         current_line = original_lines[i]
-                        if self.is_end_marker(current_line):
+                        if self.is_end_marker(markers, current_line):
                             # Found the end marker for this block
                             in_block = False
                             break
@@ -153,32 +143,21 @@ class BlockExtract(Common):
             )
 
         if path.is_file():
-            self.markers = Defaults.get_markers(Path(self.source_path).suffix)
-            self.process_file()
+            self.process_file1()
         else:
             for file in path.rglob("*.*"):
                 self.source_path = file
-                if Defaults.check_markers(Path(self.source_path).suffix):
-                    self.markers = Defaults.get_markers(Path(self.source_path).suffix)
-                    self.process_file()
+                self.process_file1()
 
 
 def block_extract(
     source_path: str,
     extract_directory_prefix: str,
-    extract_begin_prefix: str = None,
-    extract_begin_suffix: str = None,
-    extract_end_prefix: str = None,
-    extract_end_suffix: str = None,
 ):
     try:
         extractor = BlockExtract(
             source_path=source_path,
             extract_directory_prefix=extract_directory_prefix,
-            extract_begin_prefix=extract_begin_prefix,
-            extract_begin_suffix=extract_begin_suffix,
-            extract_end_prefix=extract_end_prefix,
-            extract_end_suffix=extract_end_suffix,
         )
         extractor.process()
     except (UnclosedBlockError, OrphanedExtractEndMarkerError) as e:
