@@ -7,6 +7,8 @@ repo_url: https://github.com/kimjarvis/lineblock
 
 theme:
   name: material
+  palette:
+    scheme: slate  # This enables dark mode with no toggle
 
 markdown_extensions:
   - pymdownx.highlight
@@ -15,5 +17,10 @@ markdown_extensions:
 nav:
   - Use cases: index.md
   - Tutorial: tutorial.md
+  - Development:
+      - Parse Parentheses: parse_parentheses.md
+      - Ensure Balanced Parentheses: ensure_balanced_parentheses.md
+      - Isolate Blocks: isolate_blocks.md
+      - Process Chunks: process_chunks.md
 
 

@@ -4,7 +4,10 @@ version = "0.0.2"
 description = "Lineblocks is a documentation synchronization tool that maintains consistency between code examples and their corresponding documentation."
 readme = "README.md"
 requires-python = ">=3.10"
-dependencies = []
+dependencies = [
+    "pydantic>=2.12.5",
+    "pyyaml>=6.0.3",
+]
 license = { file = "LICENSE" }  # Points to the file containing the GPL v3 license
 classifiers = [
     "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
