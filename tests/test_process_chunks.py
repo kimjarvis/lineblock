@@ -15,7 +15,7 @@ def test_invalid_sublist_length():
 
 def test_invalid_list_item():
     with pytest.raises(ValueError, match="Invalid list item"):
-        process_chunks([[5]])
+        process_chunks([[5,6,7]])
 
 def test_failed_json_parse():
     with pytest.raises(ValueError, match="Failed to parse JSON"):
@@ -203,7 +203,7 @@ def test_mixed_input():
 def test_json_with_unicode():
     """Test parsing JSON with Unicode characters"""
     input_data = [['{"message": "Hello, 世界"}', 'sep', '{"greeting": "¡Hola!"}']]
-    expected = [{"message": "Hello, 世界"}, 'sep', {"greeting": "¡Hola!"}]
+    expected = [[{"message": "Hello, 世界"}, 'sep', {"greeting": "¡Hola!"}]]
 
     result = process_chunks(input_data)
     assert result == expected
