@@ -216,3 +216,129 @@ def test_empty_json_objects():
 
     result = process_chunks(input_data)
     assert result == expected
+
+
+
+
+def test_string_pass_through():
+    """Test that strings are passed through unchanged."""
+    assert process_chunks(['A']) == ['A']
+    assert process_chunks(['hello', 'world']) == ['hello', 'world']
+    assert process_chunks([]) == []
+
+
+def test_invalid_item_type_integer():
+    """Test that integers raise ValueError with 'Invalid item type'."""
+    with pytest.raises(ValueError, match="Invalid item type"):
+        process_chunks([5])
+
+
+def test_invalid_item_type_dict():
+    """Test that dictionaries raise ValueError with 'Invalid item type'."""
+    with pytest.raises(ValueError, match="Invalid item type"):
+        process_chunks([{"key": "value"}])
+
+
+def test_invalid_item_type_none():
+    """Test that None raises ValueError with 'Invalid item type'."""
+    with pytest.raises(ValueError, match="Invalid item type"):
+        process_chunks([None])
+
+
+def test_invalid_sub_list_length_one():
+    """Test that sub-list with 1 item raises ValueError with 'Invalid sub-list length'."""
+    with pytest.raises(ValueError, match="Invalid sub-list length"):
+        process_chunks([['A']])
+
+
+def test_invalid_sub_list_length_two():
+    """Test that sub-list with 2 items raises ValueError with 'Invalid sub-list length'."""
+    with pytest.raises(ValueError, match="Invalid sub-list length"):
+        process_chunks([['A', 'B']])
+
+
+def test_invalid_sub_list_length_four():
+    """Test that sub-list with 4 items raises ValueError with 'Invalid sub-list length'."""
+    with pytest.raises(ValueError, match="Invalid sub-list length"):
+        process_chunks([['A', 'B', 'C', 'D']])
+
+
+def test_invalid_list_item_integer():
+    """Test that integer in sub-list raises ValueError with 'Invalid list item'."""
+    with pytest.raises(ValueError, match="Invalid sub-list length"):
+        process_chunks([[5]])
+
+
+def test_invalid_list_item_dict():
+    """Test that dict in sub-list raises ValueError with 'Invalid list item'."""
+    with pytest.raises(ValueError, match="Invalid sub-list length"):
+        process_chunks([[{"key": "value"}]])
+
+
+def test_invalid_list_item_mixed():
+    """Test that mixed types in sub-list raise ValueError with 'Invalid list item'."""
+    with pytest.raises(ValueError, match="Invalid list item"):
+        process_chunks([['A', 5, 'C']])
+
+
+def test_failed_to_parse_json_first():
+    """Test that invalid JSON in first position raises ValueError with 'Failed to parse JSON'."""
+    with pytest.raises(ValueError, match="Failed to parse JSON"):
+        process_chunks([['A', 'B', 'C']])
+
+
+def test_failed_to_parse_json_third():
+    """Test that invalid JSON in third position raises ValueError with 'Failed to parse JSON'."""
+    with pytest.raises(ValueError, match="Failed to parse JSON"):
+        process_chunks([['{"valid": true}', 'B', 'invalid json']])
+
+
+def test_valid_json_parsing():
+    """Test successful JSON parsing of first and third items."""
+    json1 = '''{  "name": "John Doe",  "email": "john@example.com",  "age": 30,  "active": true,  "roles": ["admin", "user"],  "address": {    "street": "123 Main St",    "city": "New York",    "country": "USA"  },  "projects": [    {"id": 1, "name": "Website Redesign"},    {"id": 2, "name": "Mobile App"}  ] }'''
+    json2 = '''{  "title": "John Doe" }'''
+
+    result = process_chunks([[json1, "B", json2]])
+
+    expected_first = {
+        "name": "John Doe",
+        "email": "john@example.com",
+        "age": 30,
+        "active": True,
+        "roles": ["admin", "user"],
+        "address": {
+            "street": "123 Main St",
+            "city": "New York",
+            "country": "USA"
+        },
+        "projects": [
+            {"id": 1, "name": "Website Redesign"},
+            {"id": 2, "name": "Mobile App"}
+        ]
+    }
+    expected_third = {"title": "John Doe"}
+
+    assert result[0][0] == expected_first
+    assert result[0][1] == "B"
+    assert result[0][2] == expected_third
+
+
+def test_mixed_string_and_sublist():
+    """Test that strings and sub-lists can be mixed."""
+    result = process_chunks(['A', ['{"x": 1}', 'middle', '{"y": 2}'], 'B'])
+
+    assert result[0] == 'A'
+    assert result[1] == [{"x": 1}, 'middle', {"y": 2}]
+    assert result[2] == 'B'
+
+
+def test_empty_sublist():
+    """Test that empty sub-list raises ValueError with 'Invalid sub-list length'."""
+    with pytest.raises(ValueError, match="Invalid sub-list length"):
+        process_chunks([[]])
+
+
+def test_nested_list():
+    """Test that nested list in sub-list raises ValueError with 'Invalid list item'."""
+    with pytest.raises(ValueError, match="Invalid list item"):
+        process_chunks([['A', ['nested'], 'C']])
